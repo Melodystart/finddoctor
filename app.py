@@ -197,6 +197,8 @@ def readReview(inputtext):
     try:
         if len(Linkst) == 0:
             print("沒有其他連結")
+            Title = driver.find_element(By.CSS_SELECTOR, "h1").text
+            print(Title)
             getReviews(keyword, result)
         else:
             for link in Linkst:
