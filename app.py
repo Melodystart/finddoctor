@@ -101,6 +101,7 @@ def readReview(inputtext):
                 print("下滑視窗")
             except:
                 pass
+            time.sleep(3)
             reviews = driver.find_elements(By.CLASS_NAME, 'jJc9Ad')
             for review in reviews:
                 name = review.find_element(By.CLASS_NAME, 'd4r55 ').text
