@@ -94,7 +94,7 @@ def readReview(inputtext):
                 mores = driver.find_elements(By.CLASS_NAME, 'w8nwRe')
                 for more in mores:
                     more.click()
-
+                print("---------"+i+"幾次迴圈-------------")
                 reviews = driver.find_elements(By.CLASS_NAME, 'jJc9Ad')
                 for review in reviews:
                     name = review.find_element(By.CLASS_NAME, 'd4r55 ').text
