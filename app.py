@@ -58,7 +58,7 @@ def readBusiness(keyword):
 def readReview(inputtext):
     def getReviews(keyword, result):
         Title = driver.find_element(By.CSS_SELECTOR, "h1").text
-        if "醫" in Title or "診所" in Title:
+        if "Hospital" in Title or "Clinic" in Title or "醫" in Title or "診所" in Title:
             Btn = driver.find_element(By.XPATH, "//button[2]")  # 點選評論
             Btn.click()
             time.sleep(1)
@@ -71,13 +71,13 @@ def readReview(inputtext):
             Input.send_keys(Keys.ENTER)
             time.sleep(3)
 
-            sort = driver.find_element(
-                By.XPATH, "//*[contains(text(), '排序')]")  # 選擇排序
-            sort.click()
-            time.sleep(1)
+            # sort = driver.find_element(
+            #     By.XPATH, "//*[contains(text(), '排序')]")  # 選擇排序
+            # sort.click()
+            # time.sleep(1)
 
-            new = driver.find_elements(By.CLASS_NAME, 'fxNQSd')[1]  # 選擇最新
-            new.click()
+            # new = driver.find_elements(By.CLASS_NAME, 'fxNQSd')[1]  # 選擇最新
+            # new.click()
             count = 0
             for i in range(10):
                 try:
@@ -457,5 +457,6 @@ def getBusiness(keyword):
 def getAll(keyword):
     result = readBusiness(keyword)
     return result, 200
+
 
 app.run(host="0.0.0.0", port=8080)
