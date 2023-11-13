@@ -119,7 +119,7 @@ def readReview(inputtext):
     ua = UserAgent()
     user_agent = ua.random  # 偽裝隨機產生瀏覽器、作業系統
     options.add_argument(f'--user-agent={user_agent}')
-    options.add_argument('headless')
+    # options.add_argument('headless')
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
@@ -130,7 +130,7 @@ def readReview(inputtext):
     options.add_argument('--disable-infobars')
     options.add_argument('enable-features=NetworkServiceInProcess')
     options.add_argument('--disable-dev-shm-usage')
-
+    options.add_argument('--remote-debugging-port=9222')
     options.add_experimental_option("detach", True)  # 加入後不會閃退
     options.page_load_strategy = 'normal'
     driver = webdriver.Chrome(options=options)
