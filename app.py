@@ -56,12 +56,17 @@ def readBusiness(keyword):
 
 
 def readReview(inputtext):
-    def getReviews(keyword, result):
+    def getReviews(keyword, result, link):
         Title = driver.find_element(By.CSS_SELECTOR, "h1").text
         # if "Hospital" in Title or "Clinic" in Title or "醫" in Title or "診所" in Title:
         print("函數中")
-        Btn = driver.find_element(By.XPATH, "//button[2]")  # 點選評論
-        Btn.click()
+        while True:
+            try:
+                Btn = driver.find_elements(By.CLASS_NAME, "Gpq6kf")[1]  # 點選評論
+                Btn.click()
+                break
+            except:
+                driver.get(link)
         time.sleep(1)
         print("點選評論")
         print(Btn)
@@ -73,7 +78,7 @@ def readReview(inputtext):
         Input = driver.find_element(By.CLASS_NAME, 'LCTIRd')
         Input.send_keys(keyword)  # 輸入搜尋
         Input.send_keys(Keys.ENTER)
-        time.sleep(5)
+        time.sleep(2)
         print("輸入搜尋")
         print(Input)
         # sort = driver.find_element(
@@ -87,20 +92,23 @@ def readReview(inputtext):
         container = driver.find_element(By.CLASS_NAME, 'DxyBCb')
         print("在小框框內")
         print(container)
-        for i in range(10):
+        print("迴圈即將開始")
+        for i in range(5):
+            print(i)
+            driver.execute_script(
+                "arguments[0].scrollBy(0, arguments[0].scrollHeight);", container)
+            print("下滑視窗")
             try:
-                driver.execute_script(
-                    "arguments[0].scrollBy(0, arguments[0].scrollHeight);", container)
                 mores = driver.find_elements(By.CLASS_NAME, 'w8nwRe')
                 for more in mores:
                     more.click()
-                print("---------"+i+"幾次迴圈-------------")
-                reviews = driver.find_elements(By.CLASS_NAME, 'jJc9Ad')
-                for review in reviews:
-                    name = review.find_element(By.CLASS_NAME, 'd4r55 ').text
-                    print(name)
+                print("下滑視窗")
             except:
-                break
+                pass
+            reviews = driver.find_elements(By.CLASS_NAME, 'jJc9Ad')
+            for review in reviews:
+                name = review.find_element(By.CLASS_NAME, 'd4r55 ').text
+                print(name)
         print("下滑資料")
         reviews = driver.find_elements(By.CLASS_NAME, 'jJc9Ad')
         for review in reviews:
@@ -182,7 +190,12 @@ def readReview(inputtext):
 
     for j in range(i, linkLength):
         Link = Links[j].get_attribute("href")
+        print("連結")
         print(Link)
+        if "&entry=ttu" not in Link:
+            Link = Link + "&entry=ttu"
+            print("更新後的連結")
+            print(Link)
         Linkst.append(Link)
 
     result = {}
@@ -195,7 +208,7 @@ def readReview(inputtext):
                 if len(result["data"]) == 0:
                     driver.get(link)
                     print("外開視窗")
-                    getReviews(keyword, result)
+                    getReviews(keyword, result, link)
                 else:
                     print("已經有資料了")
                     break
