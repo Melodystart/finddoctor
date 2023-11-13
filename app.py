@@ -72,7 +72,7 @@ def readReview(inputtext):
         print("點選搜尋")
         print(Search)
         Input = driver.find_element(By.CLASS_NAME, 'LCTIRd')
-        Input.send_keys(keyword)  # 輸入搜尋
+        Input.send_keys("Chen Weiming")  # 輸入搜尋
         Input.send_keys(Keys.ENTER)
         time.sleep(3)
         print("輸入搜尋")
