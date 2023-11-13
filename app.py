@@ -129,7 +129,6 @@ def readReview(inputtext):
     options.add_argument('enable-automation')
     options.add_argument('--disable-infobars')
     options.add_argument('enable-features=NetworkServiceInProcess')
-    options.add_argument('--disable-dev-shm-usage')
     options.add_experimental_option("detach", True)  # 加入後不會閃退
     options.page_load_strategy = 'normal'
     driver = webdriver.Chrome(options=options)
