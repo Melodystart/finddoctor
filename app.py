@@ -122,7 +122,7 @@ def readReview(inputtext):
     ua = UserAgent()
     user_agent = ua.random  # 偽裝隨機產生瀏覽器、作業系統
     options.add_argument(f'--user-agent={user_agent}')
-    options.add_argument('--headless=new')
+    options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('start-maximized')
