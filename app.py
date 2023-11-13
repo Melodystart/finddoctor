@@ -71,7 +71,7 @@ def readReview(inputtext):
         Input = driver.find_element(By.CLASS_NAME, 'LCTIRd')
         Input.send_keys(keyword)  # 輸入搜尋
         Input.send_keys(Keys.ENTER)
-        time.sleep(3)
+        time.sleep(5)
         print("輸入搜尋")
         # sort = driver.find_element(
         #     By.XPATH, "//*[contains(text(), '排序')]")  # 選擇排序
