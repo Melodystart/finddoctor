@@ -174,30 +174,29 @@ def readReview(inputtext):
     Linkst = []
 
     i = 0
-
     sponsors = driver.find_elements(By.CLASS_NAME, 'jHLihd')
     for sponsor in sponsors:
         i += 1
         print(sponsor.text)
-
     Links = driver.find_elements(By.CLASS_NAME, 'hfpxzc')
     print(str(len(Links))+"個連結")
 
-    linkLength = len(Links) - i
-
-    if linkLength > 3:
-        linkLength = 3
-
-    for j in range(i, linkLength):
-        Link = Links[j].get_attribute("href")
-        print("連結")
-        print(Link)
-        if "&entry=ttu" not in Link:
-            Link = Link + "&entry=ttu"
-            print("更新後的連結")
+    try:
+        linkLength = len(Links) - i
+        if linkLength > 3:
+            linkLength = 3
+        for j in range(i, linkLength):
+            Link = Links[j].get_attribute("href")
+            print("連結")
             print(Link)
-        Linkst.append(Link)
-
+            if "&entry=ttu" not in Link:
+                Link = Link + "&entry=ttu"
+                print("更新後的連結")
+                print(Link)
+            Linkst.append(Link)
+    except:
+        pass
+    
     result = {}
     result["data"] = []
     try:
