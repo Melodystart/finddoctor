@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FindDoctor</title>
+  <link rel="stylesheet" href="template.css">
+  <script src="https://kit.fontawesome.com/37fb3b3f95.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+  <div class="nav">
+    <a class="logo" href="/">FindDoctor</a>
+    <div class="keyword">
+      <input class="doctor" placeholder="請輸入醫生名稱">
+      <input class="department" placeholder="科別">
+      <i class="fas fa-search"></i>
+    </div>
+  </div>
+
+  <div class="tab">
+    <div class="category">
+      <a class="category-text thank" href="" style="color:white;">臺北榮總感謝函</a>
+    </div>
+    <div class="category">
+      <a class="category-text search active" href="" style="color:rgb(137, 207, 240);">感謝</a>
+    </div>
+    <div class="category">
+      <a class="category-text Ptt" href="" style="color:white;">Ptt</a>
+    </div>
+    <div class="category">
+      <a class="category-text blog" href="" style="color:white;">部落格</a>
+    </div>
+    <div class="category">
+      <a class="category-text review" href="" style="color:white;">Google評論</a>
+    </div>
+    <div class="category">
+      <a class="category-text business" href="" style="color:white;">良醫健康網</a>
+    </div>
+    <div class="category">
+      <a class="category-text judgment" href="" style="color:white;">司法院判決書</a>
+    </div>
+  </div>
+  <hr>
+
+
+  <div class="content-container">
+
+    <div class="content">
+    </div>
+
+  </div>
+
+</body>
+
+<script>
+
+  function getSearch() {
+    const keyword = decodeURIComponent(window.location.search).replace("?search=", "");
+    const search = document.querySelector(".doctor");
+    search.value = keyword;
+
+    url = "/api/search/" + keyword;
+
+    fetch(url, { method: "GET" })
+      .then(response => response.json())
+      .then(result => {
+        const contentContainer = document.querySelector(".content-container")
+        const data = result["data"]
+
+        data.forEach(d => {
+          const content = document.createElement("div");
+          content.classList.add("content");
+
+          title = d["title"].replace(keyword, `<span class="highlight">${keyword}</span>`)
+          text = d["text"].replace(keyword, `<span class="highlight">${keyword}</span>`)
+
+          content.innerHTML = `
+              <div class="content-title"><a class="content-link" href="${d["url"]}" target="_blank">${title}</a>
+              </div>
+              <div class="content-text">${text}</div>`
+          contentContainer.appendChild(content);
+        })
+      })
+      .catch(error => console.error("Error:", error))
+  }
+
+  getSearch();
+
+  const submit = document.querySelector(".fas")
+  submit.addEventListener("click", function (event) {
+    const search = document.querySelector(".doctor").value
+    return window.location.href = "/search?search=" + search
+  })
+
+  document.querySelector(".thank").href = "/thank?search=" + document.querySelector(".doctor").value
+  document.querySelector(".search").href = "/search?search=" + document.querySelector(".doctor").value
+  document.querySelector(".Ptt").href = "/Ptt?search=" + document.querySelector(".doctor").value
+  document.querySelector(".blog").href = "/blog?search=" + document.querySelector(".doctor").value
+  document.querySelector(".judgment").href = "/judgment?search=" + document.querySelector(".doctor").value
+  document.querySelector(".review").href = "/review?search=" + document.querySelector(".doctor").value
+  document.querySelector(".business").href = "/business?search=" + document.querySelector(".doctor").value
+</script>
+
+</html>
