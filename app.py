@@ -63,6 +63,7 @@ def readReview(inputtext):
         Btn = driver.find_elements(By.CLASS_NAME, "Gpq6kf")[1]  # 點選評論
         Btn.click()
         time.sleep(1)
+        print(Btn.text)
         print("點選評論")
         print(Btn)
         Search = driver.find_elements(By.CLASS_NAME, "g88MCb")[1]  # 點選搜尋
@@ -73,7 +74,7 @@ def readReview(inputtext):
         Input = driver.find_element(By.CLASS_NAME, 'LCTIRd')
         Input.send_keys(keyword)  # 輸入搜尋
         Input.send_keys(Keys.ENTER)
-        time.sleep(2)
+        time.sleep(3)
         print("輸入搜尋")
         print(Input)
         # sort = driver.find_element(
