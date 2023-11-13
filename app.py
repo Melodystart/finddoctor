@@ -454,7 +454,7 @@ def getBusiness(keyword):
 
 
 @app.route("/api/<keyword>")
-def getBusiness(keyword):
+def getAll(keyword):
     result = readBusiness(keyword)
     return result, 200
 
