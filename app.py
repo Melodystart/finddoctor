@@ -114,11 +114,13 @@ def readReview(inputtext):
             item["when"] = when
             item["comment"] = comment
             result["data"].append(item)
+            print("裝入資料")
         return result
 
     options = Options()
     ua = UserAgent()
     user_agent = ua.random  # 偽裝隨機產生瀏覽器、作業系統
+    options.add_argument("--lang=zh-TW")
     options.add_argument(f'--user-agent={user_agent}')
     options.add_argument('headless')
     options.add_argument('--headless')
