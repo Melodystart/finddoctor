@@ -5,12 +5,12 @@ import time
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from flask import *
-# import mysql.connector
 from mysql.connector import pooling
 from dotenv import get_key
 import requests
 import urllib.request
 from bs4 import BeautifulSoup
+# import threading
 
 conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
     ".env", "password"), host='localhost', database='finddoctor', pool_name='findConPool', pool_size=10,  auth_plugin='mysql_native_password')
@@ -119,8 +119,8 @@ def readReview(inputtext):
     ua = UserAgent()
     user_agent = ua.random  # 偽裝隨機產生瀏覽器、作業系統
     options.add_argument(f'--user-agent={user_agent}')
-    # options.add_argument('headless')
-    # options.add_argument('--headless')
+    options.add_argument('headless')
+    options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('start-maximized')
@@ -201,8 +201,8 @@ def readJudgment(keyword):
     ua = UserAgent()
     user_agent = ua.random  # 偽裝隨機產生瀏覽器、作業系統
     options.add_argument(f'--user-agent={user_agent}')
-    # options.add_argument('headless')
-    # options.add_argument('--headless')
+    options.add_argument('headless')
+    options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('start-maximized')
@@ -452,5 +452,10 @@ def getBusiness(keyword):
     result = readBusiness(keyword)
     return result, 200
 
+
+@app.route("/api/<keyword>")
+def getBusiness(keyword):
+    result = readBusiness(keyword)
+    return result, 200
 
 app.run(host="0.0.0.0", port=8080)
