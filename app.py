@@ -58,61 +58,62 @@ def readBusiness(keyword):
 def readReview(inputtext):
     def getReviews(keyword, result):
         Title = driver.find_element(By.CSS_SELECTOR, "h1").text
-        if "Hospital" in Title or "Clinic" in Title or "醫" in Title or "診所" in Title:
-            Btn = driver.find_element(By.XPATH, "//button[2]")  # 點選評論
-            Btn.click()
-            time.sleep(1)
+        # if "Hospital" in Title or "Clinic" in Title or "醫" in Title or "診所" in Title:
+        print("函數中")
+        Btn = driver.find_element(By.XPATH, "//button[2]")  # 點選評論
+        Btn.click()
+        time.sleep(1)
+        print("點選評論")
+        Search = driver.find_elements(By.CLASS_NAME, "g88MCb")[1]  # 點選搜尋
+        Search.click()
+        print("點選搜尋")
+        Input = driver.find_element(By.CLASS_NAME, 'LCTIRd')
+        Input.send_keys(keyword)  # 輸入搜尋
+        Input.send_keys(Keys.ENTER)
+        time.sleep(3)
+        print("輸入搜尋")
+        # sort = driver.find_element(
+        #     By.XPATH, "//*[contains(text(), '排序')]")  # 選擇排序
+        # sort.click()
+        # time.sleep(1)
 
-            Search = driver.find_elements(By.CLASS_NAME, "g88MCb")[1]  # 點選搜尋
-            Search.click()
+        # new = driver.find_elements(By.CLASS_NAME, 'fxNQSd')[1]  # 選擇最新
+        # new.click()
+        count = 0
+        for i in range(10):
+            try:
+                container = driver.find_element(By.CLASS_NAME, 'DxyBCb')
+                driver.execute_script(
+                    "arguments[0].scrollBy(0, arguments[0].scrollHeight);", container)
+                mores = driver.find_elements(By.CLASS_NAME, 'w8nwRe')
+                for more in mores:
+                    more.click()
+            except:
+                break
+        print("下滑資料")
+        reviews = driver.find_elements(By.CLASS_NAME, 'jJc9Ad')
+        for review in reviews:
+            count += 1
+            name = review.find_element(By.CLASS_NAME, 'd4r55 ').text
 
-            Input = driver.find_element(By.CLASS_NAME, 'LCTIRd')
-            Input.send_keys(keyword)  # 輸入搜尋
-            Input.send_keys(Keys.ENTER)
-            time.sleep(3)
+            star = review.find_element(
+                By.CLASS_NAME, 'kvMYJc').get_attribute("aria-label")
 
-            # sort = driver.find_element(
-            #     By.XPATH, "//*[contains(text(), '排序')]")  # 選擇排序
-            # sort.click()
-            # time.sleep(1)
+            when = review.find_element(By.CLASS_NAME, 'rsqaWe').text
 
-            # new = driver.find_elements(By.CLASS_NAME, 'fxNQSd')[1]  # 選擇最新
-            # new.click()
-            count = 0
-            for i in range(10):
-                try:
-                    container = driver.find_element(By.CLASS_NAME, 'DxyBCb')
-                    driver.execute_script(
-                        "arguments[0].scrollBy(0, arguments[0].scrollHeight);", container)
-                    mores = driver.find_elements(By.CLASS_NAME, 'w8nwRe')
-                    for more in mores:
-                        more.click()
-                except:
-                    break
+            try:
+                comment = review.find_element(By.CLASS_NAME, 'wiI7pd').text
+            except:
+                comment = ""
+            result["title"] = Title
 
-            reviews = driver.find_elements(By.CLASS_NAME, 'jJc9Ad')
-            for review in reviews:
-                count += 1
-                name = review.find_element(By.CLASS_NAME, 'd4r55 ').text
-
-                star = review.find_element(
-                    By.CLASS_NAME, 'kvMYJc').get_attribute("aria-label")
-
-                when = review.find_element(By.CLASS_NAME, 'rsqaWe').text
-
-                try:
-                    comment = review.find_element(By.CLASS_NAME, 'wiI7pd').text
-                except:
-                    comment = ""
-                result["title"] = Title
-
-                item = {}
-                item["location"] = Title
-                item["name"] = name
-                item["star"] = star
-                item["when"] = when
-                item["comment"] = comment
-                result["data"].append(item)
+            item = {}
+            item["location"] = Title
+            item["name"] = name
+            item["star"] = star
+            item["when"] = when
+            item["comment"] = comment
+            result["data"].append(item)
         return result
 
     options = Options()
