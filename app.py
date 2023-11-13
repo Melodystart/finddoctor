@@ -56,17 +56,12 @@ def readBusiness(keyword):
 
 
 def readReview(inputtext):
-    def getReviews(keyword, result, link):
+    def getReviews(keyword, result):
         Title = driver.find_element(By.CSS_SELECTOR, "h1").text
         # if "Hospital" in Title or "Clinic" in Title or "醫" in Title or "診所" in Title:
         print("函數中")
-        while True:
-            try:
-                Btn = driver.find_elements(By.CLASS_NAME, "Gpq6kf")[1]  # 點選評論
-                Btn.click()
-                break
-            except:
-                driver.get(link)
+        Btn = driver.find_elements(By.CLASS_NAME, "Gpq6kf")[1]  # 點選評論
+        Btn.click()
         time.sleep(1)
         print("點選評論")
         print(Btn)
@@ -208,7 +203,14 @@ def readReview(inputtext):
                 if len(result["data"]) == 0:
                     driver.get(link)
                     print("外開視窗")
-                    getReviews(keyword, result, link)
+                    while True:
+                        try:
+                            driver.find_elements(By.CLASS_NAME, "Gpq6kf")[
+                                1]  # 點選評論
+                            getReviews(keyword, result)
+                            break
+                        except:
+                            driver.get(link)
                 else:
                     print("已經有資料了")
                     break
