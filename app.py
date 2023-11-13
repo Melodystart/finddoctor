@@ -76,7 +76,6 @@ def readReview(inputtext):
         Input.send_keys(Keys.ENTER)
         time.sleep(3)
         print("輸入搜尋")
-        print(Input)
         # sort = driver.find_element(
         #     By.XPATH, "//*[contains(text(), '排序')]")  # 選擇排序
         # sort.click()
