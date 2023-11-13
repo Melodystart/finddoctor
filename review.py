@@ -135,17 +135,3 @@
 
 
 # url = 'https://maps.googleapis.com/maps/api/place/textsearch/json?query="陳威明"+"醫"&key={MAP_KEY}'
-
-from serpapi import GoogleSearch
-
-params = {
-    "engine": "google_maps_reviews",
-    "place_id": "ChIJq6q6AoquQjQRk27N2_Y8tWE",
-    "api_key": "2bbe87bdc30b92ff1e70918a097cd5824459f84ed4cd81b5df68b49f9f178985"
-}
-
-search = GoogleSearch(params)
-results = search.get_dict()
-reviews = results["reviews"]
-print(reviews)
-print(results)

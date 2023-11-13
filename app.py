@@ -64,15 +64,18 @@ def readReview(inputtext):
         Btn.click()
         time.sleep(1)
         print("點選評論")
+        print(Btn)
         Search = driver.find_elements(By.CLASS_NAME, "g88MCb")[1]  # 點選搜尋
         Search.click()
         time.sleep(1)
         print("點選搜尋")
+        print(Search)
         Input = driver.find_element(By.CLASS_NAME, 'LCTIRd')
         Input.send_keys(keyword)  # 輸入搜尋
         Input.send_keys(Keys.ENTER)
         time.sleep(5)
         print("輸入搜尋")
+        print(Input)
         # sort = driver.find_element(
         #     By.XPATH, "//*[contains(text(), '排序')]")  # 選擇排序
         # sort.click()
@@ -84,6 +87,7 @@ def readReview(inputtext):
         for i in range(10):
             try:
                 container = driver.find_element(By.CLASS_NAME, 'DxyBCb')
+                print(container)
                 driver.execute_script(
                     "arguments[0].scrollBy(0, arguments[0].scrollHeight);", container)
                 mores = driver.find_elements(By.CLASS_NAME, 'w8nwRe')
