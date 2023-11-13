@@ -196,11 +196,12 @@ def readReview(inputtext):
             Linkst.append(Link)
     except:
         pass
-    
+
     result = {}
     result["data"] = []
     try:
         if len(Linkst) == 0:
+            print("沒有其他連結")
             getReviews(keyword, result)
         else:
             for link in Linkst:
