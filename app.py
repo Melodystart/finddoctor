@@ -66,6 +66,7 @@ def readReview(inputtext):
         print("點選評論")
         Search = driver.find_elements(By.CLASS_NAME, "g88MCb")[1]  # 點選搜尋
         Search.click()
+        time.sleep(1)
         print("點選搜尋")
         Input = driver.find_element(By.CLASS_NAME, 'LCTIRd')
         Input.send_keys(keyword)  # 輸入搜尋
@@ -120,10 +121,8 @@ def readReview(inputtext):
     options = Options()
     ua = UserAgent()
     user_agent = ua.random  # 偽裝隨機產生瀏覽器、作業系統
-    options.add_argument("--lang=zh-TW")
     options.add_argument(f'--user-agent={user_agent}')
-    options.add_argument('headless')
-    options.add_argument('--headless')
+    options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('start-maximized')
@@ -133,6 +132,7 @@ def readReview(inputtext):
     options.add_argument('--disable-infobars')
     options.add_argument('enable-features=NetworkServiceInProcess')
     options.add_experimental_option("detach", True)  # 加入後不會閃退
+    options.add_argument('--lang=zh-tw')
     options.page_load_strategy = 'normal'
     driver = webdriver.Chrome(options=options)
     driver.maximize_window()
