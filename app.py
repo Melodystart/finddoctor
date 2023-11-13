@@ -84,15 +84,21 @@ def readReview(inputtext):
         # new = driver.find_elements(By.CLASS_NAME, 'fxNQSd')[1]  # 選擇最新
         # new.click()
         count = 0
+        container = driver.find_element(By.CLASS_NAME, 'DxyBCb')
+        print("在小框框內")
+        print(container)
         for i in range(10):
             try:
-                container = driver.find_element(By.CLASS_NAME, 'DxyBCb')
-                print(container)
                 driver.execute_script(
                     "arguments[0].scrollBy(0, arguments[0].scrollHeight);", container)
                 mores = driver.find_elements(By.CLASS_NAME, 'w8nwRe')
                 for more in mores:
                     more.click()
+
+                reviews = driver.find_elements(By.CLASS_NAME, 'jJc9Ad')
+                for review in reviews:
+                    name = review.find_element(By.CLASS_NAME, 'd4r55 ').text
+                    print(name)
             except:
                 break
         print("下滑資料")
