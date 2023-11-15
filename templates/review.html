@@ -78,7 +78,7 @@
         if (result["data"].length === 0) {
           contentContainer.innerHTML = `
           <div class="content" style="color:yellow;">找不到資料</div>
-          <div class="from">搜尋關鍵字可增加醫院名稱，例如：王大明 榮總</div>`
+          <div class="from">搜尋關鍵字可嘗試增加醫院名稱，例如：王大明 榮總</div>`
         } else {
           contentContainer.innerHTML = `<div class="from">資料來源：Google評論@${result["title"]}</div>`;
           const data = result["data"]
