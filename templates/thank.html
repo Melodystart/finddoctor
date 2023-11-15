@@ -73,7 +73,6 @@
         } else {
           const contentContainer = document.querySelector(".content-container")
           const data = result["data"]
-
           data.forEach(d => {
             const content = document.createElement("div");
             content.classList.add("content");
@@ -82,7 +81,7 @@
             text = d["text"].replace(keyword, `<span class="highlight">${keyword}</span>`)
 
             content.innerHTML = `
-              <div class="content-title"><a class="content-link" href="${d["url"]}" target="_blank">${title}</a>
+              <div class="content-title"><a class="content-link" href="${d["url"]}" target="_blank">${d["when"]}：${title}</a>
               </div>
               <div class="content-text">${text}</div>`
             contentContainer.appendChild(content);

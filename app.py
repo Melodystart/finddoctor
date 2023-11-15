@@ -423,7 +423,7 @@ def readThank(keyword):
     con = conPool.get_connection()
     cursor = con.cursor()
     cursor.execute(
-        "SELECT thankUrl.url, thank.target, thank.content FROM thank LEFT JOIN thankUrl ON thank.month = thankUrl.month WHERE content LIKE %s;", ("%" + keyword + "%",))
+        "SELECT thankUrl.url, thank.target, thank.content, thank.month FROM thank LEFT JOIN thankUrl ON thank.month = thankUrl.month WHERE content LIKE %s;", ("%" + keyword + "%",))
     data = cursor.fetchall()
     cursor.close()
     con.close()
@@ -438,6 +438,7 @@ def viewThank(data):
         item["url"] = d[0]
         item["title"] = d[1]
         item["text"] = d[2]
+        item["when"] = d[3]
         result["data"].append(item)
     return result
 
