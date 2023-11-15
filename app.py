@@ -165,34 +165,39 @@ def readBusiness(keyword):
     url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_BUSINESS}&q={query}&start={start}"
 
     data = requests.get(url).json()
-
-    for i in range(len(data["items"])):
-        if (query+"醫師介紹和評價") in data["items"][i]["title"]:
-            url = data["items"][i]["link"]
-            result["url"] = url
-            result["title"] = data["items"][i]["title"]
-            with urllib.request.urlopen(url) as response:
-                html = response.read().decode("utf-8")
-            soup = BeautifulSoup(html, "html.parser")
-            messages = soup.find_all("div", class_="commentbody")
-            for message in messages:
-                posttime = message.find("div", class_="posttime").text
-                commentPart = message.find("p", class_="commentcont-part").text
-                commentAll = message.find("p", class_="commentcont-all").text
-                if len(commentAll) == 0:
-                    comment = commentPart
-                else:
-                    comment = commentAll
-                posttime = posttime.split()
-                item = {}
-                item["name"] = posttime[0].replace("發表於", "")
-                item["posttime"] = untilNow(time.mktime(
-                    datetime.strptime(posttime[1], "%Y/%m/%d").timetuple()))
-                item["comment"] = comment
-                result["data"].append(item)
-            return result
-        else:
-            pass
+    try:
+        for i in range(len(data["items"])):
+            if (query+"醫師介紹和評價") in data["items"][i]["title"]:
+                url = data["items"][i]["link"]
+                result["url"] = url
+                result["title"] = data["items"][i]["title"]
+                with urllib.request.urlopen(url) as response:
+                    html = response.read().decode("utf-8")
+                soup = BeautifulSoup(html, "html.parser")
+                messages = soup.find_all("div", class_="commentbody")
+                for message in messages:
+                    posttime = message.find("div", class_="posttime").text
+                    commentPart = message.find(
+                        "p", class_="commentcont-part").text
+                    commentAll = message.find(
+                        "p", class_="commentcont-all").text
+                    if len(commentAll) == 0:
+                        comment = commentPart
+                    else:
+                        comment = commentAll
+                    posttime = posttime.split()
+                    item = {}
+                    item["name"] = posttime[0].replace("發表於", "")
+                    item["posttime"] = untilNow(time.mktime(
+                        datetime.strptime(posttime[1], "%Y/%m/%d").timetuple()))
+                    item["comment"] = comment
+                    result["data"].append(item)
+                return result
+            else:
+                pass
+    except:
+        pass
+    return result
 
 
 def crawlReview(inputtext):

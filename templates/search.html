@@ -69,7 +69,7 @@
       .then(result => {
         if (result["data"].length === 0) {
           contentContainer.innerHTML = `
-          <div class="content" style="color:yellow;">搜尋不到資料</div>`
+          <div class="content" style="color:#f76b8a;">搜尋不到資料</div>`
         } else {
           const contentContainer = document.querySelector(".content-container")
           const data = result["data"]

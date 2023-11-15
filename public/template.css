@@ -47,6 +47,7 @@ a {
   margin: 10px 0px 10px 15px;
   display: flex;
   align-items: center;
+  background-color: #F6F6F6;
 }
 
 input {
@@ -71,7 +72,6 @@ input {
   right: 10px;
   font-size: 22px;
   color: #0476D0;
-  /* color: #5078ef; */
   cursor: pointer;
 }
 
