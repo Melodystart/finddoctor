@@ -52,7 +52,7 @@ def untilNow(ts):
         return (str(years) + "年前")
 
 
-def readReview(keyword):
+def readReview(inputtext):
     T1 = time.perf_counter()
 
     def callReviewAPI(place_id, keyword, result):
@@ -112,8 +112,13 @@ def readReview(keyword):
         except:
             pass
         return result
-
-    query = keyword + "醫"
+    try:
+        keyword = inputtext.split()[0]
+        location = inputtext.split()[1]
+    except:
+        keyword = inputtext
+        location = ""
+    query = inputtext + "醫"
     API_KEY = get_key(".env", "API_KEY")
 
     url = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=" + \
@@ -610,9 +615,9 @@ def getJudgment(keyword):
     return result, 200
 
 
-@app.route("/api/review/<keyword>")
-def getReview(keyword):
-    result = readReview(keyword)
+@app.route("/api/review/<inputtext>")
+def getReview(inputtext):
+    result = readReview(inputtext)
     return result, 200
 
 
