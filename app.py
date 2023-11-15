@@ -62,11 +62,7 @@ def readReview(inputtext):
             review_rating = reviews[i]["review_rating"]
             review_timestamp = untilNow(reviews[i]["review_timestamp"])
             review_link = reviews[i]["review_link"]
-            # print(author)
-            # print(review)
-            # print(review_rating)
-            # print(review_timestamp)
-            # print(review_link)
+
             item = {}
             item["name"] = author
             item["star"] = review_rating
@@ -79,36 +75,36 @@ def readReview(inputtext):
         api_client = ApiClient(
             api_key=get_key(".env", "review_api_key"))
         results = api_client.google_maps_reviews(
-            place_id, reviews_limit=1, reviews_query=keyword, sort="newest", language="zh-TW", region="TW")
+            place_id, reviews_limit=5, reviews_query=keyword, sort="newest", language="zh-TW", region="TW")
         try:
             reviews = results[0]["reviews_data"]
             if len(reviews) > 0:
                 location = results[0]["name"]
                 print(location)
                 result["title"] = location
-                threads2 = []
-                for i in range(len(reviews)):
-                    threads2.append(threading.Thread(
-                        target=viewReview, args=(i, location)))
-                    threads2[i].start()
-                for i in range(len(reviews)):
-                    threads2[i].join()
-
+                # threads2 = []
                 # for i in range(len(reviews)):
-                #     author = reviews[i]["author_title"]
-                #     review = reviews[i]["review_text"]
-                #     review_rating = reviews[i]["review_rating"]
-                #     review_timestamp = untilNow(reviews[i]["review_timestamp"])
-                #     review_link = reviews[i]["review_link"]
+                #     threads2.append(threading.Thread(
+                #         target=viewReview, args=(i, location)))
+                #     threads2[i].start()
+                # for i in range(len(reviews)):
+                #     threads2[i].join()
 
-                #     item = {}
-                #     item["location"] = location
-                #     item["name"] = author
-                #     item["star"] = review_rating
-                #     item["when"] = review_timestamp
-                #     item["comment"] = review
-                #     item["link"] = review_link
-                #     result["data"].append(item)
+                for i in range(len(reviews)):
+                    author = reviews[i]["author_title"]
+                    review = reviews[i]["review_text"]
+                    review_rating = reviews[i]["review_rating"]
+                    review_timestamp = untilNow(reviews[i]["review_timestamp"])
+                    review_link = reviews[i]["review_link"]
+
+                    item = {}
+                    item["location"] = location
+                    item["name"] = author
+                    item["star"] = review_rating
+                    item["when"] = review_timestamp
+                    item["comment"] = review
+                    item["link"] = review_link
+                    result["data"].append(item)
         except:
             pass
         return result
