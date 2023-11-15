@@ -74,23 +74,30 @@
     fetch(url, { method: "GET" })
       .then(response => response.json())
       .then(result => {
-        contentContainer.innerHTML = `<div class="from">資料來源：Google評論@${result["title"]}</div>`;
-        const data = result["data"]
 
-        data.forEach(d => {
-          const content = document.createElement("div");
-          content.classList.add("content");
+        if (result["data"].length === 0) {
+          contentContainer.innerHTML = `
+          <div class="content" style="color:yellow;">找不到資料</div>
+          <div class="from">搜尋關鍵字可增加醫院名稱，例如：王大明 榮總</div>`
+        } else {
+          contentContainer.innerHTML = `<div class="from">資料來源：Google評論@${result["title"]}</div>`;
+          const data = result["data"]
 
-          title = d["name"].replace(keyword, `<span class="highlight">${keyword}</span>`)
-          text = d["comment"].replace(keyword, `<span class="highlight">${keyword}</span>`)
+          data.forEach(d => {
+            const content = document.createElement("div");
+            content.classList.add("content");
 
-          star = starImg(d["star"])
-          content.innerHTML = `
+            title = d["name"].replace(keyword, `<span class="highlight">${keyword}</span>`)
+            text = d["comment"].replace(keyword, `<span class="highlight">${keyword}</span>`)
+
+            star = starImg(d["star"])
+            content.innerHTML = `
             <a href="${d["link"]}" target="_blank"><span class="content-title">${star}  ${d["when"]}</span>
             <span class="content-name">@${title}</span></a>
             <div class="content-text">${text}</div>`
-          contentContainer.appendChild(content);
-        })
+            contentContainer.appendChild(content);
+          })
+        }
       })
       .catch(error => console.error("Error:", error))
   }
