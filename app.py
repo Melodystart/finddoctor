@@ -82,29 +82,29 @@ def readReview(inputtext):
                 location = results[0]["name"]
                 print(location)
                 result["title"] = location
-                # threads2 = []
-                # for i in range(len(reviews)):
-                #     threads2.append(threading.Thread(
-                #         target=viewReview, args=(i, location)))
-                #     threads2[i].start()
-                # for i in range(len(reviews)):
-                #     threads2[i].join()
-
+                threads2 = []
                 for i in range(len(reviews)):
-                    author = reviews[i]["author_title"]
-                    review = reviews[i]["review_text"]
-                    review_rating = reviews[i]["review_rating"]
-                    review_timestamp = untilNow(reviews[i]["review_timestamp"])
-                    review_link = reviews[i]["review_link"]
+                    threads2.append(threading.Thread(
+                        target=viewReview, args=(i, location)))
+                    threads2[i].start()
+                for i in range(len(reviews)):
+                    threads2[i].join()
 
-                    item = {}
-                    item["location"] = location
-                    item["name"] = author
-                    item["star"] = review_rating
-                    item["when"] = review_timestamp
-                    item["comment"] = review
-                    item["link"] = review_link
-                    result["data"].append(item)
+                # for i in range(len(reviews)):
+                #     author = reviews[i]["author_title"]
+                #     review = reviews[i]["review_text"]
+                #     review_rating = reviews[i]["review_rating"]
+                #     review_timestamp = untilNow(reviews[i]["review_timestamp"])
+                #     review_link = reviews[i]["review_link"]
+
+                #     item = {}
+                #     item["location"] = location
+                #     item["name"] = author
+                #     item["star"] = review_rating
+                #     item["when"] = review_timestamp
+                #     item["comment"] = review
+                #     item["link"] = review_link
+                #     result["data"].append(item)
         except:
             pass
         return result
