@@ -64,17 +64,23 @@
     fetch(url, { method: "GET" })
       .then(response => response.json())
       .then(result => {
-        contentContainer.innerHTML = "";
-        const data = result["data"]
 
-        data.forEach(d => {
-          const content = document.createElement("div");
-          content.classList.add("content");
-          content.innerHTML = `
+        if (result["data"].length === 0) {
+          contentContainer.innerHTML = `
+          <div class="content" style="color:yellow;">找不到資料</div>`
+        } else {
+          contentContainer.innerHTML = "";
+          const data = result["data"]
+
+          data.forEach(d => {
+            const content = document.createElement("div");
+            content.classList.add("content");
+            content.innerHTML = `
               <div class="content-title"><a class="content-link" href="${d["url"]}" target="_blank">${d["title"]}</a>
               </div>`
-          contentContainer.appendChild(content);
-        })
+            contentContainer.appendChild(content);
+          })
+        }
       })
       .catch(error => console.error("Error:", error))
   }
