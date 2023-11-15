@@ -71,11 +71,11 @@
           const content = document.createElement("div");
           content.classList.add("content");
 
-          title = d["posttime"].replace(keyword, `<span class="highlight">${keyword}</span>`)
           text = d["comment"].replace(keyword, `<span class="highlight">${keyword}</span>`)
 
           content.innerHTML = `
-              <div class="content-title">${title}</div>
+            <span class="content-title">${d["posttime"]}</span>
+            <span class="content-name">@${d["name"]}</span>
               <div class="content-text">${text}</div>`
           contentContainer.appendChild(content);
         })

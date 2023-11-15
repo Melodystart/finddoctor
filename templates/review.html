@@ -56,7 +56,7 @@
 
   function getReview() {
     function starImg(starcounts) {
-      starcounts = Number(starcounts.replace("顆星", ""))
+      starcounts = Number(starcounts)
       let star = "";
       for (i = 0; i < starcounts; i++) {
         star = star + `<img class="star" src="/star.png" width="15" height="15">`;
@@ -86,8 +86,8 @@
 
           star = starImg(d["star"])
           content.innerHTML = `
-            <span class="content-title">${star}  ${d["when"]}</span>
-            <span class="content-name">@${title}</span>
+            <a href="${d["link"]}" target="_blank"><span class="content-title">${star}  ${d["when"]}</span>
+            <span class="content-name">@${title}</span></a>
             <div class="content-text">${text}</div>`
           contentContainer.appendChild(content);
         })

@@ -10,10 +10,146 @@ from dotenv import get_key
 import requests
 import urllib.request
 from bs4 import BeautifulSoup
-# import threading
+import threading
+from outscraper import ApiClient
+from datetime import datetime, timezone, timedelta
+from dateutil.relativedelta import relativedelta
 
 conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
     ".env", "password"), host='localhost', database='finddoctor', pool_name='findConPool', pool_size=10,  auth_plugin='mysql_native_password')
+
+
+def untilNow(ts):
+    # 設定utc時區
+    past_utc = datetime.utcfromtimestamp(ts).replace(tzinfo=timezone.utc)
+    now_utc = datetime.now(tz=timezone.utc)
+
+    # 設定utc+8時區
+    # utf8 = timezone(timedelta(hours=8))
+    # past_utc8 = past_utc.astimezone(utf8)
+    # now_utc8 = now_utc.astimezone(utf8)
+
+    until_now = relativedelta(now_utc, past_utc)
+
+    years = until_now.years
+    months = until_now.months
+    days = until_now.days
+    hours = until_now.hours
+    minutes = until_now.minutes
+
+    if years == 0:
+        if months == 0:
+            if days == 0:
+                if hours == 0:
+                    return (str(minutes) + "分鐘前")
+                else:
+                    return (str(hours) + "小時前")
+            else:
+                return (str(days) + "天前")
+        else:
+            return (str(months) + "個月前")
+    else:
+        return (str(years) + "年前")
+
+
+def readReview(keyword):
+    T1 = time.perf_counter()
+
+    def callReviewAPI(place_id, keyword, result):
+        def viewReview(i, location):
+            author = reviews[i]["author_title"]
+            review = reviews[i]["review_text"]
+            review_rating = reviews[i]["review_rating"]
+            review_timestamp = untilNow(reviews[i]["review_timestamp"])
+            review_link = reviews[i]["review_link"]
+            # print(author)
+            # print(review)
+            # print(review_rating)
+            # print(review_timestamp)
+            # print(review_link)
+            item = {}
+            item["name"] = author
+            item["star"] = review_rating
+            item["when"] = review_timestamp
+            item["comment"] = review
+            item["link"] = review_link
+            item["location"] = location
+            result["data"].append(item)
+
+        api_client = ApiClient(
+            api_key=get_key(".env", "review_api_key"))
+        results = api_client.google_maps_reviews(
+            place_id, reviews_limit=1, reviews_query=keyword, sort="newest", language="zh-TW", region="TW")
+        try:
+            reviews = results[0]["reviews_data"]
+            if len(reviews) > 0:
+                location = results[0]["name"]
+                print(location)
+                result["title"] = location
+                threads2 = []
+                for i in range(len(reviews)):
+                    threads2.append(threading.Thread(
+                        target=viewReview, args=(i, location)))
+                    threads2[i].start()
+                for i in range(len(reviews)):
+                    threads2[i].join()
+
+                # for i in range(len(reviews)):
+                #     author = reviews[i]["author_title"]
+                #     review = reviews[i]["review_text"]
+                #     review_rating = reviews[i]["review_rating"]
+                #     review_timestamp = untilNow(reviews[i]["review_timestamp"])
+                #     review_link = reviews[i]["review_link"]
+
+                #     item = {}
+                #     item["location"] = location
+                #     item["name"] = author
+                #     item["star"] = review_rating
+                #     item["when"] = review_timestamp
+                #     item["comment"] = review
+                #     item["link"] = review_link
+                #     result["data"].append(item)
+        except:
+            pass
+        return result
+
+    query = keyword + "醫"
+    API_KEY = get_key(".env", "API_KEY")
+
+    url = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=" + \
+        query+"&key="+API_KEY+"&language=zh-TW"
+    data = requests.get(url).json()
+
+    places = []
+    for i in range(len(data["results"])):
+        if "醫院" in data["results"][i]["name"] or "診所" in data["results"][i]["name"]:
+            print(data["results"][i]["name"])
+            places.append(data["results"][i]["place_id"])
+
+    counts = len(data["results"])
+    if counts > 2:  # 僅取前二個搜尋地點
+        counts = 2
+
+    # -----------------未處理若找不到place情形
+    result = {}
+    result["data"] = []
+    # 使用threading 7.5~29毫秒
+    threads = []
+    for i in range(counts):
+        threads.append(threading.Thread(
+            target=callReviewAPI, args=(places[i], keyword, result)))
+        threads[i].start()
+
+    for i in range(counts):
+        threads[i].join()
+
+    # 沒有使用threading 19毫秒
+    # for i in range(counts):
+    #     callReviewAPI(data["results"][i]["place_id"], keyword)
+    print(result)
+    T2 = time.perf_counter()
+    print('%s毫秒' % ((T2 - T1)*1000))
+    return result
 
 
 def readBusiness(keyword):
@@ -46,8 +182,11 @@ def readBusiness(keyword):
                     comment = commentPart
                 else:
                     comment = commentAll
+                posttime = posttime.split()
                 item = {}
-                item["posttime"] = posttime
+                item["name"] = posttime[0].replace("發表於", "")
+                item["posttime"] = untilNow(time.mktime(
+                    datetime.strptime(posttime[1], "%Y/%m/%d").timetuple()))
                 item["comment"] = comment
                 result["data"].append(item)
             return result
@@ -55,7 +194,7 @@ def readBusiness(keyword):
             pass
 
 
-def readReview(inputtext):
+def crawlReview(inputtext):
     def getReviews(keyword, result):
         Title = driver.find_element(By.CSS_SELECTOR, "h1").text
         # if "Hospital" in Title or "Clinic" in Title or "醫" in Title or "診所" in Title:
@@ -471,9 +610,9 @@ def getJudgment(keyword):
     return result, 200
 
 
-@app.route("/api/review/<inputtext>")
-def getReview(inputtext):
-    result = readReview(inputtext)
+@app.route("/api/review/<keyword>")
+def getReview(keyword):
+    result = readReview(keyword)
     return result, 200
 
 
