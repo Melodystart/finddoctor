@@ -67,22 +67,27 @@
     fetch(url, { method: "GET" })
       .then(response => response.json())
       .then(result => {
-        const contentContainer = document.querySelector(".content-container")
-        const data = result["data"]
+        if (result["data"].length === 0) {
+          contentContainer.innerHTML = `
+          <div class="content" style="color:yellow;">搜尋不到資料</div>`
+        } else {
+          const contentContainer = document.querySelector(".content-container")
+          const data = result["data"]
 
-        data.forEach(d => {
-          const content = document.createElement("div");
-          content.classList.add("content");
+          data.forEach(d => {
+            const content = document.createElement("div");
+            content.classList.add("content");
 
-          title = d["title"].replace(keyword, `<span class="highlight">${keyword}</span>`)
-          text = d["text"].replace(keyword, `<span class="highlight">${keyword}</span>`)
+            title = d["title"].replace(keyword, `<span class="highlight">${keyword}</span>`)
+            text = d["text"].replace(keyword, `<span class="highlight">${keyword}</span>`)
 
-          content.innerHTML = `
+            content.innerHTML = `
               <div class="content-title"><a class="content-link" href="${d["url"]}" target="_blank">${title}</a>
               </div>
               <div class="content-text">${text}</div>`
-          contentContainer.appendChild(content);
-        })
+            contentContainer.appendChild(content);
+          })
+        }
       })
       .catch(error => console.error("Error:", error))
   }

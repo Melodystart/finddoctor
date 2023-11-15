@@ -64,21 +64,26 @@
     fetch(url, { method: "GET" })
       .then(response => response.json())
       .then(result => {
-        contentContainer.innerHTML = `<div class="from"><a href="${result["url"]}" target="_blank" style="color:#4ACFAC;">資料來源：${result["title"]}</a></div>`;
-        const data = result["data"]
+        if (result["data"].length === 0) {
+          contentContainer.innerHTML = `
+          <div class="content" style="color:yellow;">搜尋不到資料</div>`
+        } else {
+          contentContainer.innerHTML = `<div class="from"><a href="${result["url"]}" target="_blank" style="color:#4ACFAC;">資料來源：${result["title"]}</a></div>`;
+          const data = result["data"]
 
-        data.forEach(d => {
-          const content = document.createElement("div");
-          content.classList.add("content");
+          data.forEach(d => {
+            const content = document.createElement("div");
+            content.classList.add("content");
 
-          text = d["comment"].replace(keyword, `<span class="highlight">${keyword}</span>`)
+            text = d["comment"].replace(keyword, `<span class="highlight">${keyword}</span>`)
 
-          content.innerHTML = `
+            content.innerHTML = `
             <span class="content-title">${d["posttime"]}</span>
             <span class="content-name">@${d["name"]}</span>
               <div class="content-text">${text}</div>`
-          contentContainer.appendChild(content);
-        })
+            contentContainer.appendChild(content);
+          })
+        }
       })
       .catch(error => console.error("Error:", error))
   }
