@@ -27,17 +27,17 @@
 
     submit.addEventListener("click", function (event) {
       const search = document.querySelector(".doctor").value
-      // const url = '/api/thank/' + search
-      // fetch(url, { method: 'get' })
-      //   .then(response => response.json())
-      //   .then(responseJson => {
-      //     if (responseJson["error"]) {
-      //       return window.location.href = "/"
-      //     } else {
-      //       return window.location.href = "/thank?search=" + search
-      //     }
-      //   })
-      //   .catch(error => window.location.href = "/")
+      const url = '/api/' + search
+      fetch(url, { method: 'get' })
+      // .then(response => response.json())
+      // .then(responseJson => {
+      //   if (responseJson["error"]) {
+      //     return window.location.href = "/"
+      //   } else {
+      //     return window.location.href = "/thank?search=" + search
+      //   }
+      // })
+      // .catch(error => window.location.href = "/")
       return window.location.href = "/thank?search=" + search
     })
 
