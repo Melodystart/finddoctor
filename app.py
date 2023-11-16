@@ -122,7 +122,7 @@ def readReview(inputtext, T1):
     API_KEY = get_key(".env", "API_KEY")
 
     url = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=" + \
-        query+"&key="+API_KEY
+        query+"&key="+API_KEY+"&language=zh-TW&region=TW"
     data = requests.get(url).json()
     result = {}
     result["data"] = []
