@@ -118,7 +118,7 @@ def readReview(inputtext, T1):
     except:
         keyword = inputtext
         location = ""
-    query = inputtext + "醫"
+    query = inputtext + " 醫生"
     API_KEY = get_key(".env", "API_KEY")
 
     url = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=" + \
@@ -542,7 +542,6 @@ def readPtt(keyword, T1):
 
             page += 1
         except:
-            print("Ptt沒資料")
             break
 
     T2 = time.perf_counter()
