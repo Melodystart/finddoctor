@@ -14,9 +14,17 @@ import threading
 from outscraper import ApiClient
 from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
+from functools import partial
+from multiprocessing.pool import ThreadPool
 
 conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
     ".env", "password"), host='localhost', database='finddoctor', pool_name='findConPool', pool_size=10,  auth_plugin='mysql_native_password')
+
+
+def error(result, message):
+    result["error"] = True
+    result["message"] = message
+    return result
 
 
 def untilNow(ts):
@@ -52,71 +60,58 @@ def untilNow(ts):
         return (str(years) + "年前")
 
 
-def readReview(inputtext):
-    T1 = time.perf_counter()
-
+def readReview(inputtext, T1):
     def callReviewAPI(place_id, keyword, result):
-        def viewReview(i, location):
-            author = reviews[i]["author_title"]
-            review = reviews[i]["review_text"]
-            review_rating = int(reviews[i]["review_rating"])
-            # review_timestamp = untilNow(reviews[i]["review_timestamp"])
-            review_timestamp = reviews[i]["review_timestamp"]
-            review_link = reviews[i]["review_link"]
-
-            item = {}
-            item["name"] = author
-            item["star"] = review_rating
-            item["when"] = review_timestamp
-            item["review"] = review
-            item["link"] = review_link
-            item["location"] = location
-            result["data"].append(item)
-
-            con = conPool.get_connection()
-            cursor = con.cursor()
-            cursor.execute(
-                "INSERT INTO review (doctor, author, star, timestamp, review, link, location ) VALUES (%s, %s,%s, %s, %s,%s,%s)", (keyword, author, review_rating, review_timestamp, review, review_link, location))
-            con.commit()
-            cursor.close()
-            con.close()
-
         api_client = ApiClient(
             api_key=get_key(".env", "review_api_key"))
         results = api_client.google_maps_reviews(
             place_id, reviews_limit=1, reviews_query=keyword, sort="newest", language="zh-TW", region="TW")
         try:
+            T3 = time.perf_counter()
             reviews = results[0]["reviews_data"]
+            print("API回應了 ："+results[0]["name"])
+            print('%s毫秒' % ((T3 - T1)*1000))
+
             if len(reviews) > 0:
                 location = results[0]["name"]
-                print(location)
                 result["title"] = location
-                threads2 = []
-                for i in range(len(reviews)):
-                    threads2.append(threading.Thread(
-                        target=viewReview, args=(i, location)))
-                    threads2[i].start()
-                for i in range(len(reviews)):
-                    threads2[i].join()
 
-                # for i in range(len(reviews)):
-                #     author = reviews[i]["author_title"]
-                #     review = reviews[i]["review_text"]
-                #     review_rating = reviews[i]["review_rating"]
-                #     review_timestamp = untilNow(reviews[i]["review_timestamp"])
-                #     review_link = reviews[i]["review_link"]
+                for i in range(len(reviews)):
+                    author = reviews[i]["author_title"]
+                    review = reviews[i]["review_text"]
+                    review_rating = reviews[i]["review_rating"]
+                    review_timestamp = reviews[i]["review_timestamp"]
+                    review_until = untilNow(review_timestamp)
+                    review_link = reviews[i]["review_link"]
 
-                #     item = {}
-                #     item["location"] = location
-                #     item["name"] = author
-                #     item["star"] = review_rating
-                #     item["when"] = review_timestamp
-                #     item["comment"] = review
-                #     item["link"] = review_link
-                #     result["data"].append(item)
+                    item = {}
+                    item["location"] = location
+                    item["name"] = author
+                    item["star"] = review_rating
+                    item["when"] = review_until
+                    item["review"] = review
+                    item["link"] = review_link
+                    result["data"].append(item)
+
+                    con = conPool.get_connection()
+                    cursor = con.cursor()
+                    cursor.execute(
+                        "INSERT INTO review (doctor, author, star, timestamp, review, link, location ) VALUES (%s, %s,%s, %s, %s,%s,%s)", (keyword, author, review_rating, review_timestamp, review, review_link, location))
+                    con.commit()
+                    cursor.close()
+                    con.close()
+
+                T4 = time.perf_counter()
+                print("資料append好了："+location)
+                print('%s毫秒' % ((T4 - T1)*1000))
+
+            else:
+                T4 = time.perf_counter()
+                print("無資料："+results[0]["name"])
+                print('%s毫秒' % ((T4 - T1)*1000))
         except:
             pass
-        return result
+
     try:
         keyword = inputtext.split()[0]
         location = inputtext.split()[1]
@@ -129,41 +124,52 @@ def readReview(inputtext):
     url = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=" + \
         query+"&key="+API_KEY+"&language=zh-TW"
     data = requests.get(url).json()
-
-    places = []
-    for i in range(len(data["results"])):
-        if "醫院" in data["results"][i]["name"] or "診所" in data["results"][i]["name"]:
-            print(data["results"][i]["name"])
-            places.append(data["results"][i]["place_id"])
-
-    counts = len(data["results"])
-    if counts > 2:  # 僅取前二個搜尋地點
-        counts = 2
-
-    # -----------------未處理若找不到place情形
     result = {}
     result["data"] = []
-    # 使用threading 7.5~29毫秒
-    threads = []
-    for i in range(counts):
-        threads.append(threading.Thread(
-            target=callReviewAPI, args=(places[i], keyword, result)))
-        threads[i].start()
+    try:
+        places_dict = {}
+        for i in range(len(data["results"])):
+            if ("醫院" in data["results"][i]["name"]) or ("診所" in data["results"][i]["name"]):
+                places_dict[data["results"][i]["place_id"]
+                            ] = data["results"][i]["user_ratings_total"]
+        print(places_dict)
+        places_sort = dict(sorted(places_dict.items(),
+                                  key=lambda x: x[1], reverse=True))
+        print(places_sort)
+        places = list(places_sort.keys())
+        counts = len(places)
+        if counts > 2:  # 僅取前二個搜尋地點
+            counts = 2
 
-    for i in range(counts):
-        threads[i].join()
+        # 使用threading
+        threads = []
 
-    # 沒有使用threading 19毫秒
-    # for i in range(counts):
-    #     callReviewAPI(data["results"][i]["place_id"], keyword)
-    print(result)
-    T2 = time.perf_counter()
-    print('%s毫秒' % ((T2 - T1)*1000))
-    print("review好了")
-    return result
+        for i in range(counts):
+            threads.append(threading.Thread(
+                target=callReviewAPI, args=(places[i], keyword, result)))
+            T2 = time.perf_counter()
+            threads[i].start()
+            print("開始呼叫API："+places[i])
+            print('%s毫秒' % ((T2 - T1)*1000))
+
+        timeout = 60
+        for i in range(counts):
+            threads[i].join(timeout)
+
+        # 沒使用threading
+        # for i in range(counts):
+        #     T5 = time.perf_counter()
+        #     print("開始呼叫API："+data["results"][i]["place_id"])
+        #     print('%s毫秒' % ((T5 - T1)*1000))
+        #     callReviewAPI(data["results"][i]["place_id"], keyword, result)
+    except:
+        print("review沒資料")
+    T5 = time.perf_counter()
+    print("review好了："+'%s毫秒' % ((T5 - T1)*1000))
+    return result, 200
 
 
-def readBusiness(keyword):
+def readBusiness(keyword, T1):
     API_KEY = get_key(".env", "API_KEY")
     SEARCH_ENGINE_ID_BUSINESS = get_key(".env", "SEARCH_ENGINE_ID_BUSINESS")
     query = keyword
@@ -227,13 +233,13 @@ def readBusiness(keyword):
                     con.commit()
                     cursor.close()
                     con.close()
-                print("商周好了")
-                return result
             else:
                 pass
     except:
-        pass
-    return result
+        print("商周找不到資料")
+    T2 = time.perf_counter()
+    print("商周好了："+'%s毫秒' % ((T2 - T1)*1000))
+    return result, 200
 
 
 def crawlReview(inputtext):
@@ -407,7 +413,7 @@ def crawlReview(inputtext):
     return result
 
 
-def readJudgment(keyword):
+def readJudgment(keyword, T1):
     options = Options()
     ua = UserAgent()
     user_agent = ua.random  # 偽裝隨機產生瀏覽器、作業系統
@@ -428,42 +434,47 @@ def readJudgment(keyword):
     options.page_load_strategy = 'normal'
     driver = webdriver.Chrome(options=options)
     driver.maximize_window()
-
-    driver.get("https://judgment.judicial.gov.tw/FJUD/default.aspx")
-    Input = driver.find_element(By.ID, 'txtKW')
-    Input.send_keys('(被告'+keyword+'+被上訴人'+keyword+'+相對人' +
-                    keyword+'+被告醫院之履行輔助人'+keyword+')&(醫生+醫師)')
-    Btn = driver.find_element(By.ID, 'btnSimpleQry')
-    Btn.send_keys(Keys.ENTER)
-    driver.switch_to.frame('iframe-data')
-
-    time.sleep(1)
-    links = driver.find_elements(By.CLASS_NAME, 'hlTitle_scroll')
-    # tags = driver.find_elements(By.CLASS_NAME, 'tdCut')
     result = {}
     result["data"] = []
 
-    for l in links:
-        link = l.get_attribute("href")
-        title = l.text
+    try:
+        driver.get("https://judgment.judicial.gov.tw/FJUD/default.aspx")
+        Input = driver.find_element(By.ID, 'txtKW')
+        Input.send_keys('(被告'+keyword+'+被上訴人'+keyword+'+相對人' +
+                        keyword+'+被告醫院之履行輔助人'+keyword+')&(醫生+醫師)')
+        Btn = driver.find_element(By.ID, 'btnSimpleQry')
+        Btn.send_keys(Keys.ENTER)
+        driver.switch_to.frame('iframe-data')
 
-        item = {}
-        item["url"] = link
-        item["title"] = title
-        result["data"].append(item)
+        time.sleep(1)
+        links = driver.find_elements(By.CLASS_NAME, 'hlTitle_scroll')
+        # tags = driver.find_elements(By.CLASS_NAME, 'tdCut')
 
-        con = conPool.get_connection()
-        cursor = con.cursor()
-        cursor.execute(
-            "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (keyword, link, title))
-        con.commit()
-        cursor.close()
-        con.close()
+        for l in links:
+            link = l.get_attribute("href")
+            title = l.text
 
-    driver.close()
-    driver.quit()
-    print("司法院好了")
-    return result
+            item = {}
+            item["url"] = link
+            item["title"] = title
+            result["data"].append(item)
+
+            con = conPool.get_connection()
+            cursor = con.cursor()
+            cursor.execute(
+                "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (keyword, link, title))
+            con.commit()
+            cursor.close()
+            con.close()
+
+        driver.close()
+        driver.quit()
+    except:
+        print("司法院找不到資料")
+
+    T2 = time.perf_counter()
+    print("司法院好了："+'%s毫秒' % ((T2 - T1)*1000))
+    return result, 200
 
 
 def readThank(keyword):
@@ -490,7 +501,7 @@ def viewThank(data):
     return result
 
 
-def readPtt(keyword):
+def readPtt(keyword, T1):
     API_KEY = get_key(".env", "API_KEY")
     SEARCH_ENGINE_ID_PTT = get_key(".env", "SEARCH_ENGINE_ID_PTT")
     query = keyword + "醫生"
@@ -531,12 +542,15 @@ def readPtt(keyword):
 
             page += 1
         except:
+            print("Ptt沒資料")
             break
-    print("Ptt好了")
-    return result
+
+    T2 = time.perf_counter()
+    print("Ptt好了："+'%s毫秒' % ((T2 - T1)*1000))
+    return result, 200
 
 
-def readSearch(keyword):
+def readSearch(keyword, T1):
     API_KEY = get_key(".env", "API_KEY")
     SEARCH_ENGINE_ID_ALL = get_key(".env", "SEARCH_ENGINE_ID_ALL")
     query = keyword+"醫"+"感謝"
@@ -569,18 +583,15 @@ def readSearch(keyword):
                 con.commit()
                 cursor.close()
                 con.close()
-
     except:
-        item = {}
-        item["url"] = ""
-        item["title"] = ""
-        item["text"] = ""
-        result["data"].append(item)
-    print("Search好了")
-    return result
+        print("Search沒資料")
+
+    T2 = time.perf_counter()
+    print("Search好了："+'%s毫秒' % ((T2 - T1)*1000))
+    return result, 200
 
 
-def readBlog(keyword):
+def readBlog(keyword, T1):
     API_KEY = get_key(".env", "API_KEY")
     SEARCH_ENGINE_ID_BLOG = get_key(".env", "SEARCH_ENGINE_ID_BLOG")
     query = '"'+keyword+'"+"醫"'
@@ -616,9 +627,10 @@ def readBlog(keyword):
                     con.close()
 
     except:
-        pass
-    print("Blog好了")
-    return result
+        print("Blog沒資料")
+    T2 = time.perf_counter()
+    print("Blog好了："+'%s毫秒' % ((T2 - T1)*1000))
+    return result, 200
 
 
 mysql_user = get_key(".env", "user")
@@ -675,72 +687,79 @@ def business():
 def getthank(keyword):
     data = readThank(keyword)
     result = viewThank(data)
-    return result, 200
+    return result
 
 
 @app.route("/api/Ptt/<keyword>")
 def getPtt(keyword):
-    result = readPtt(keyword)
-    return result, 200
+    T1 = time.perf_counter()
+    result = readPtt(keyword, T1)
+    return result
 
 
 @app.route("/api/search/<keyword>")
 def getSearch(keyword):
-    result = readSearch(keyword)
-    return result, 200
+    T1 = time.perf_counter()
+    result = readSearch(keyword, T1)
+    return result
 
 
 @app.route("/api/blog/<keyword>")
 def getBlog(keyword):
-    result = readBlog(keyword)
-    return result, 200
+    T1 = time.perf_counter()
+    result = readBlog(keyword, T1)
+    return result
 
 
 @app.route("/api/judgment/<keyword>")
 def getJudgment(keyword):
-    result = readJudgment(keyword)
-    return result, 200
+    T1 = time.perf_counter()
+    result = readJudgment(keyword, T1)
+    return result
 
 
 @app.route("/api/review/<inputtext>")
 def getReview(inputtext):
-    result = readReview(inputtext)
-    return result, 200
+    T1 = time.perf_counter()
+    result = readReview(inputtext, T1)
+    return result
 
 
 @app.route("/api/business/<keyword>")
 def getBusiness(keyword):
-    result = readBusiness(keyword)
-    return result, 200
+    T1 = time.perf_counter()
+    result = readBusiness(keyword, T1)
+    return result
 
 
 @app.route("/api/<keyword>")
 def getAll(keyword):
-    T3 = time.perf_counter()
+    T1 = time.perf_counter()
     threads = []
     threads.append(threading.Thread(target=readReview,
-                   args=(keyword,)))
+                   args=(keyword, T1)))
     threads.append(threading.Thread(target=readBusiness,
-                   args=(keyword,)))
+                   args=(keyword, T1)))
     threads.append(threading.Thread(target=readJudgment,
-                   args=(keyword,)))
+                   args=(keyword, T1)))
     threads.append(threading.Thread(target=readPtt,
-                   args=(keyword,)))
+                   args=(keyword, T1)))
     threads.append(threading.Thread(target=readSearch,
-                   args=(keyword,)))
+                   args=(keyword, T1)))
     threads.append(threading.Thread(target=readBlog,
-                   args=(keyword,)))
+                   args=(keyword, T1)))
     for i in range(6):
         threads[i].start()
 
     for i in range(6):
         threads[i].join()
+
     result = {}
     result["ok"] = True
-    T4 = time.perf_counter()
+    T2 = time.perf_counter()
     print("全都好了")
-    print('%s毫秒' % ((T4 - T3)*1000))
-    return result, 200
+    print('%s毫秒' % ((T2 - T1)*1000))
+    return result
 
 
 app.run(host="0.0.0.0", port=8080)
