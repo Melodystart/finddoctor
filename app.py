@@ -59,23 +59,32 @@ def readReview(inputtext):
         def viewReview(i, location):
             author = reviews[i]["author_title"]
             review = reviews[i]["review_text"]
-            review_rating = reviews[i]["review_rating"]
-            review_timestamp = untilNow(reviews[i]["review_timestamp"])
+            review_rating = int(reviews[i]["review_rating"])
+            # review_timestamp = untilNow(reviews[i]["review_timestamp"])
+            review_timestamp = reviews[i]["review_timestamp"]
             review_link = reviews[i]["review_link"]
 
             item = {}
             item["name"] = author
             item["star"] = review_rating
             item["when"] = review_timestamp
-            item["comment"] = review
+            item["review"] = review
             item["link"] = review_link
             item["location"] = location
             result["data"].append(item)
 
+            con = conPool.get_connection()
+            cursor = con.cursor()
+            cursor.execute(
+                "INSERT INTO review (doctor, author, star, timestamp, review, link, location ) VALUES (%s, %s,%s, %s, %s,%s,%s)", (keyword, author, review_rating, review_timestamp, review, review_link, location))
+            con.commit()
+            cursor.close()
+            con.close()
+
         api_client = ApiClient(
             api_key=get_key(".env", "review_api_key"))
         results = api_client.google_maps_reviews(
-            place_id, reviews_limit=5, reviews_query=keyword, sort="newest", language="zh-TW", region="TW")
+            place_id, reviews_limit=1, reviews_query=keyword, sort="newest", language="zh-TW", region="TW")
         try:
             reviews = results[0]["reviews_data"]
             if len(reviews) > 0:
@@ -150,6 +159,7 @@ def readReview(inputtext):
     print(result)
     T2 = time.perf_counter()
     print('%s毫秒' % ((T2 - T1)*1000))
+    print("review好了")
     return result
 
 
@@ -168,10 +178,24 @@ def readBusiness(keyword):
     try:
         for i in range(len(data["items"])):
             if (query+"醫師介紹和評價") in data["items"][i]["title"]:
-                url = data["items"][i]["link"]
-                result["url"] = url
-                result["title"] = data["items"][i]["title"]
-                with urllib.request.urlopen(url) as response:
+                link = data["items"][i]["link"]
+                title = data["items"][i]["title"]
+                result["url"] = link
+                result["title"] = title
+
+                con = conPool.get_connection()
+                cursor = con.cursor()
+                cursor.execute(
+                    "INSERT INTO businessLink (doctor, link, title) VALUES (%s, %s,%s)", (keyword, link, title))
+                con.commit()
+                cursor.close()
+                con.close()
+
+                request = urllib.request.Request(link, headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+                })
+
+                with urllib.request.urlopen(request) as response:
                     html = response.read().decode("utf-8")
                 soup = BeautifulSoup(html, "html.parser")
                 messages = soup.find_all("div", class_="commentbody")
@@ -186,12 +210,24 @@ def readBusiness(keyword):
                     else:
                         comment = commentAll
                     posttime = posttime.split()
+                    author = posttime[0].replace("發表於", "")
+                    timestamp = time.mktime(datetime.strptime(
+                        posttime[1], "%Y/%m/%d").timetuple())
+
                     item = {}
-                    item["name"] = posttime[0].replace("發表於", "")
-                    item["posttime"] = untilNow(time.mktime(
-                        datetime.strptime(posttime[1], "%Y/%m/%d").timetuple()))
+                    item["name"] = author
+                    item["posttime"] = untilNow(timestamp)
                     item["comment"] = comment
                     result["data"].append(item)
+
+                    con = conPool.get_connection()
+                    cursor = con.cursor()
+                    cursor.execute(
+                        "INSERT INTO businessComment (doctor, author, timestamp, comment) VALUES (%s, %s,%s, %s)", (keyword, author, timestamp, comment))
+                    con.commit()
+                    cursor.close()
+                    con.close()
+                print("商周好了")
                 return result
             else:
                 pass
@@ -407,15 +443,26 @@ def readJudgment(keyword):
     result = {}
     result["data"] = []
 
-    for link in links:
+    for l in links:
+        link = l.get_attribute("href")
+        title = l.text
+
         item = {}
-        item["url"] = link.get_attribute("href")
-        item["title"] = link.text
+        item["url"] = link
+        item["title"] = title
         result["data"].append(item)
+
+        con = conPool.get_connection()
+        cursor = con.cursor()
+        cursor.execute(
+            "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (keyword, link, title))
+        con.commit()
+        cursor.close()
+        con.close()
 
     driver.close()
     driver.quit()
-
+    print("司法院好了")
     return result
 
 
@@ -446,7 +493,7 @@ def viewThank(data):
 def readPtt(keyword):
     API_KEY = get_key(".env", "API_KEY")
     SEARCH_ENGINE_ID_PTT = get_key(".env", "SEARCH_ENGINE_ID_PTT")
-    query = keyword
+    query = keyword + "醫生"
     page = 1
     result = {}
     result["data"] = []
@@ -462,16 +509,30 @@ def readPtt(keyword):
                           "BabyMother", "BigPeitou", "BigShiLin", "GoodPregnan", ]
                 for board in boards:
                     if board in data["items"][i]["link"]:
-                        if ("徵才" not in data["items"][i]["title"] and "新聞" not in data["items"][i]["title"] and "新聞" not in data["items"][i]["snippet"]):
+                        if ("徵才" not in data["items"][i]["title"] and "新聞" not in data["items"][i]["title"] and keyword in data["items"][i]["snippet"]):
+
+                            link = data["items"][i]["link"]
+                            title = data["items"][i]["title"]
+                            text = data["items"][i]["snippet"]
+
                             item = {}
-                            item["url"] = data["items"][i]["link"]
-                            item["title"] = data["items"][i]["title"]
-                            item["text"] = data["items"][i]["snippet"]
+                            item["url"] = link
+                            item["title"] = title
+                            item["text"] = text
                             result["data"].append(item)
+
+                            con = conPool.get_connection()
+                            cursor = con.cursor()
+                            cursor.execute(
+                                "INSERT INTO Ptt (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (keyword, link, title, text))
+                            con.commit()
+                            cursor.close()
+                            con.close()
 
             page += 1
         except:
             break
+    print("Ptt好了")
     return result
 
 
@@ -490,18 +551,32 @@ def readSearch(keyword):
     try:
         for i in range(len(data["items"])):
             if keyword in data["items"][i]["title"] or keyword in data["items"][i]["snippet"]:
+
+                link = data["items"][i]["link"]
+                title = data["items"][i]["title"]
+                text = data["items"][i]["snippet"]
+
                 item = {}
-                item["url"] = data["items"][i]["link"]
-                item["title"] = data["items"][i]["title"]
-                item["text"] = data["items"][i]["snippet"]
+                item["url"] = link
+                item["title"] = title
+                item["text"] = text
                 result["data"].append(item)
+
+                con = conPool.get_connection()
+                cursor = con.cursor()
+                cursor.execute(
+                    "INSERT INTO search (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (keyword, link, title, text))
+                con.commit()
+                cursor.close()
+                con.close()
+
     except:
         item = {}
         item["url"] = ""
         item["title"] = ""
         item["text"] = ""
         result["data"].append(item)
-
+    print("Search好了")
     return result
 
 
@@ -521,18 +596,28 @@ def readBlog(keyword):
         for i in range(len(data["items"])):
             if "580913" not in data["items"][i]["title"]:
                 if keyword in data["items"][i]["title"] or keyword in data["items"][i]["snippet"]:
-                    item = {}
-                    item["url"] = data["items"][i]["link"]
-                    item["title"] = data["items"][i]["title"]
-                    item["text"] = data["items"][i]["snippet"]
-                    result["data"].append(item)
-    except:
-        item = {}
-        item["url"] = ""
-        item["title"] = ""
-        item["text"] = ""
-        result["data"].append(item)
 
+                    link = data["items"][i]["link"]
+                    title = data["items"][i]["title"]
+                    text = data["items"][i]["snippet"]
+
+                    item = {}
+                    item["url"] = link
+                    item["title"] = title
+                    item["text"] = text
+                    result["data"].append(item)
+
+                    con = conPool.get_connection()
+                    cursor = con.cursor()
+                    cursor.execute(
+                        "INSERT INTO blog (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (keyword, link, title, text))
+                    con.commit()
+                    cursor.close()
+                    con.close()
+
+    except:
+        pass
+    print("Blog好了")
     return result
 
 
@@ -631,7 +716,30 @@ def getBusiness(keyword):
 
 @app.route("/api/<keyword>")
 def getAll(keyword):
-    result = readBusiness(keyword)
+    T3 = time.perf_counter()
+    threads = []
+    threads.append(threading.Thread(target=readReview,
+                   args=(keyword,)))
+    threads.append(threading.Thread(target=readBusiness,
+                   args=(keyword,)))
+    threads.append(threading.Thread(target=readJudgment,
+                   args=(keyword,)))
+    threads.append(threading.Thread(target=readPtt,
+                   args=(keyword,)))
+    threads.append(threading.Thread(target=readSearch,
+                   args=(keyword,)))
+    threads.append(threading.Thread(target=readBlog,
+                   args=(keyword,)))
+    for i in range(6):
+        threads[i].start()
+
+    for i in range(6):
+        threads[i].join()
+    result = {}
+    result["ok"] = True
+    T4 = time.perf_counter()
+    print("全都好了")
+    print('%s毫秒' % ((T4 - T3)*1000))
     return result, 200
 
 

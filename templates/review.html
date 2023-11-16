@@ -88,7 +88,7 @@
             content.classList.add("content");
 
             title = d["name"].replace(keyword, `<span class="highlight">${keyword}</span>`)
-            text = d["comment"].replace(keyword, `<span class="highlight">${keyword}</span>`)
+            text = d["review"].replace(keyword, `<span class="highlight">${keyword}</span>`)
 
             star = starImg(d["star"])
             content.innerHTML = `
