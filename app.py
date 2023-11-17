@@ -324,8 +324,7 @@ def crawlReview(inputtext):
         print("在小框框內")
         print(container)
         print("迴圈即將開始")
-        print(container.text)
-        for i in range(5):
+        for i in range(2):
             print(i)
             driver.execute_script(
                 "arguments[0].scrollBy(0, arguments[0].scrollHeight);", container)
@@ -883,6 +882,15 @@ def getAll(keyword):
     result["ok"] = True
     T2 = time.perf_counter()
     print("全都好了")
+    print('%s毫秒' % ((T2 - T1)*1000))
+    return result
+
+
+@app.route("/api/crawlreview/<inputtext>")
+def crawl(inputtext):
+    T1 = time.perf_counter()
+    result = crawlReview(inputtext)
+    T2 = time.perf_counter()
     print('%s毫秒' % ((T2 - T1)*1000))
     return result
 
