@@ -230,62 +230,62 @@ def readBusiness(keyword, T1, expiredDay):
         url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_BUSINESS}&q={query}&start={start}"
 
         data = requests.get(url).json()
-        # try:
-        for i in range(len(data["items"])):
-            if (query+"醫師介紹和評價") in data["items"][i]["title"]:
-                link = data["items"][i]["link"]
-                title = data["items"][i]["title"]
-                result["url"] = link
-                result["title"] = title
-
-                con = conPool.get_connection()
-                cursor = con.cursor()
-                cursor.execute(
-                    "INSERT INTO businessLink (doctor, link, title) VALUES (%s, %s,%s)", (keyword, link, title))
-                con.commit()
-                cursor.close()
-                con.close()
-
-                request = urllib.request.Request(link, headers={
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
-                })
-
-                with urllib.request.urlopen(request) as response:
-                    html = response.read().decode("utf-8")
-                soup = BeautifulSoup(html, "html.parser")
-                messages = soup.find_all("div", class_="commentbody")
-                for message in messages:
-                    posttime = message.find("div", class_="posttime").text
-                    commentPart = message.find(
-                        "p", class_="commentcont-part").text
-                    commentAll = message.find(
-                        "p", class_="commentcont-all").text
-                    if len(commentAll) == 0:
-                        comment = commentPart
-                    else:
-                        comment = commentAll
-                    posttime = posttime.split()
-                    author = posttime[0].replace("發表於", "")
-                    timestamp = time.mktime(datetime.strptime(
-                        posttime[1], "%Y/%m/%d").timetuple())
-
-                    item = {}
-                    item["name"] = author
-                    item["posttime"] = untilNow(timestamp)
-                    item["comment"] = comment
-                    result["data"].append(item)
+        try:
+            for i in range(len(data["items"])):
+                if (query+"醫師介紹和評價") in data["items"][i]["title"]:
+                    link = data["items"][i]["link"]
+                    title = data["items"][i]["title"]
+                    result["url"] = link
+                    result["title"] = title
 
                     con = conPool.get_connection()
                     cursor = con.cursor()
                     cursor.execute(
-                        "INSERT INTO businessComment (doctor, author, timestamp, comment) VALUES (%s, %s,%s, %s)", (keyword, author, timestamp, comment))
+                        "INSERT INTO businessLink (doctor, link, title) VALUES (%s, %s,%s)", (keyword, link, title))
                     con.commit()
                     cursor.close()
                     con.close()
-            else:
-                print("商周找不到資料")
-        # except:
-        #     print("有錯誤，商周找不到資料")
+
+                    request = urllib.request.Request(link, headers={
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+                    })
+
+                    with urllib.request.urlopen(request) as response:
+                        html = response.read().decode("utf-8")
+                    soup = BeautifulSoup(html, "html.parser")
+                    messages = soup.find_all("div", class_="commentbody")
+                    for message in messages:
+                        posttime = message.find("div", class_="posttime").text
+                        commentPart = message.find(
+                            "p", class_="commentcont-part").text
+                        commentAll = message.find(
+                            "p", class_="commentcont-all").text
+                        if len(commentAll) == 0:
+                            comment = commentPart
+                        else:
+                            comment = commentAll
+                        posttime = posttime.split()
+                        author = posttime[0].replace("發表於", "")
+                        timestamp = time.mktime(datetime.strptime(
+                            posttime[1], "%Y/%m/%d").timetuple())
+
+                        item = {}
+                        item["name"] = author
+                        item["posttime"] = untilNow(timestamp)
+                        item["comment"] = comment
+                        result["data"].append(item)
+
+                        con = conPool.get_connection()
+                        cursor = con.cursor()
+                        cursor.execute(
+                            "INSERT INTO businessComment (doctor, author, timestamp, comment) VALUES (%s, %s,%s, %s)", (keyword, author, timestamp, comment))
+                        con.commit()
+                        cursor.close()
+                        con.close()
+                else:
+                    pass
+        except:
+            print("有錯誤，商周找不到資料")
         T2 = time.perf_counter()
         print("商周好了："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
