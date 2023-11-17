@@ -17,8 +17,13 @@ cursor.execute("DROP table IF EXISTS judgment;")
 cursor.execute("DROP table IF EXISTS Ptt;")
 cursor.execute("DROP table IF EXISTS search;")
 cursor.execute("DROP table IF EXISTS blog;")
+cursor.execute("DROP table IF EXISTS record;")
+cursor.execute("DROP table IF EXISTS newest;")
 
-
+cursor.execute(
+    "CREATE table record (id BIGINT PRIMARY KEY auto_increment,doctor VARCHAR(255), createdAt DATE DEFAULT (CURRENT_DATE));")
+cursor.execute(
+    "CREATE table newest (id BIGINT PRIMARY KEY auto_increment,doctor VARCHAR(255), createdAt DATE DEFAULT (CURRENT_DATE));")
 cursor.execute(
     "CREATE table review (id BIGINT PRIMARY KEY auto_increment,doctor VARCHAR(255), author VARCHAR(255),star BIGINT, timestamp TEXT,review TEXT, link TEXT, location VARCHAR(255), createdAt DATE DEFAULT (CURRENT_DATE));")
 cursor.execute(

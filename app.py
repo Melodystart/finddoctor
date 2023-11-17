@@ -14,8 +14,6 @@ import threading
 from outscraper import ApiClient
 from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
-from functools import partial
-from multiprocessing.pool import ThreadPool
 
 conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
     ".env", "password"), host='localhost', database='finddoctor', pool_name='findConPool', pool_size=10,  auth_plugin='mysql_native_password')
@@ -213,7 +211,7 @@ def readBusiness(keyword, T1, expiredDay):
     cursor.close()
     con.close()
 
-    if len(data) != 0:
+    if link != None:
         result["url"] = link[0]
         result["title"] = link[1]
         result["createdAt"] = link[2]
@@ -514,28 +512,36 @@ def readJudgment(keyword, T1, expiredDay):
             time.sleep(1)
             links = driver.find_elements(By.CLASS_NAME, 'hlTitle_scroll')
             # tags = driver.find_elements(By.CLASS_NAME, 'tdCut')
-
-            for l in links:
-                link = l.get_attribute("href")
-                title = l.text
-
-                item = {}
-                item["url"] = link
-                item["title"] = title
-                result["data"].append(item)
-
+            if len(links) == 0:
                 con = conPool.get_connection()
                 cursor = con.cursor()
                 cursor.execute(
-                    "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (keyword, link, title))
+                    "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (keyword, "", "搜尋不到資料：關鍵字可嘗試僅輸入醫生名稱，例如：王大明"))
                 con.commit()
                 cursor.close()
                 con.close()
+            else:
+                for l in links:
+                    link = l.get_attribute("href")
+                    title = l.text
+
+                    item = {}
+                    item["url"] = link
+                    item["title"] = title
+                    result["data"].append(item)
+
+                    con = conPool.get_connection()
+                    cursor = con.cursor()
+                    cursor.execute(
+                        "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (keyword, link, title))
+                    con.commit()
+                    cursor.close()
+                    con.close()
 
             driver.close()
             driver.quit()
         except:
-            print("司法院找不到資料")
+            pass
 
         T2 = time.perf_counter()
         print("司法院好了："+'%s毫秒' % ((T2 - T1)*1000))
@@ -858,6 +864,18 @@ def getBusiness(keyword):
 @app.route("/api/<keyword>")
 def getAll(keyword):
     T1 = time.perf_counter()
+
+    con = conPool.get_connection()
+    cursor = con.cursor()
+    cursor.execute(
+        "INSERT INTO record (doctor) VALUES (%s)", (keyword, ))
+    con.commit()
+    cursor.execute(
+        "INSERT INTO newest (doctor) VALUES (%s)", (keyword, ))
+    con.commit()
+    cursor.close()
+    con.close()
+
     expiredDay = datetime.today().date() - timedelta(days=7)
     threads = []
     threads.append(threading.Thread(target=readReview,
@@ -894,5 +912,17 @@ def crawl(inputtext):
     print('%s毫秒' % ((T2 - T1)*1000))
     return result
 
+
+# def task():
+#     print("Job Executing!")
+
+# def func():
+#     schedule.every(3).seconds.do(task)
+#     while True:
+#         schedule.run_pending()
+#         time.sleep(2)
+
+# thread = threading.Thread(target=func)
+# thread.start()
 
 app.run(host="0.0.0.0", port=8080)
