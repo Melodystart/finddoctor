@@ -60,12 +60,12 @@ def untilNow(ts):
         return (str(years) + "年前")
 
 
-def readReview(inputtext, T1):
+def readReview(inputtext, T1, expiredDay):
     def callReviewAPI(place_id, keyword, result):
         api_client = ApiClient(
             api_key=get_key(".env", "review_api_key"))
         results = api_client.google_maps_reviews(
-            place_id, reviews_limit=1, reviews_query=keyword, sort="newest", language="zh-TW", region="TW")
+            place_id, reviews_limit=3, reviews_query=keyword, sort="newest", language="zh-TW", region="TW")
         try:
             T3 = time.perf_counter()
             reviews = results[0]["reviews_data"]
@@ -118,58 +118,81 @@ def readReview(inputtext, T1):
     except:
         keyword = inputtext
         location = ""
-    query = inputtext + "醫"
-    API_KEY = get_key(".env", "API_KEY")
 
-    url = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=" + \
-        query+"&key="+API_KEY+"&language=zh-TW&region=TW"
-    data = requests.get(url).json()
     result = {}
     result["data"] = []
-    try:
-        places_dict = {}
-        for i in range(len(data["results"])):
-            if ("醫院" in data["results"][i]["name"]) or ("診所" in data["results"][i]["name"]):
-                places_dict[data["results"][i]["place_id"]
-                            ] = data["results"][i]["user_ratings_total"]
-        print(places_dict)
-        places_sort = dict(sorted(places_dict.items(),
-                                  key=lambda x: x[1], reverse=True))
-        print(places_sort)
-        places = list(places_sort.keys())
-        counts = len(places)
-        if counts > 2:  # 僅取前二個搜尋地點
-            counts = 2
 
-        # 使用threading
-        threads = []
+    con = conPool.get_connection()
+    cursor = con.cursor()
+    cursor.execute(
+        "SELECT author, star, timestamp, review, link, location FROM review WHERE doctor=%s AND createdAt>%s;", (keyword, expiredDay))
+    data = cursor.fetchall()
+    cursor.close()
+    con.close()
 
-        for i in range(counts):
-            threads.append(threading.Thread(
-                target=callReviewAPI, args=(places[i], keyword, result)))
-            T2 = time.perf_counter()
-            threads[i].start()
-            print("開始呼叫API："+places[i])
-            print('%s毫秒' % ((T2 - T1)*1000))
+    if len(data) != 0:
+        for d in data:
+            item = {}
+            item["name"] = d[0]
+            item["star"] = d[1]
+            item["when"] = untilNow(float(d[2]))
+            item["review"] = d[3]
+            item["link"] = d[4]
+            item["location"] = d[5]
+            result["data"].append(item)
+        return result
+    else:
+        query = inputtext + "醫"
+        API_KEY = get_key(".env", "API_KEY")
 
-        timeout = 60
-        for i in range(counts):
-            threads[i].join(timeout)
+        url = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=" + \
+            query+"&key="+API_KEY+"&language=zh-TW&region=TW"
+        data = requests.get(url).json()
 
-        # 沒使用threading
-        # for i in range(counts):
-        #     T5 = time.perf_counter()
-        #     print("開始呼叫API："+data["results"][i]["place_id"])
-        #     print('%s毫秒' % ((T5 - T1)*1000))
-        #     callReviewAPI(data["results"][i]["place_id"], keyword, result)
-    except:
-        print("review沒資料")
-    T5 = time.perf_counter()
-    print("review好了："+'%s毫秒' % ((T5 - T1)*1000))
-    return result, 200
+        try:
+            places_dict = {}
+            for i in range(len(data["results"])):
+                if ("醫院" in data["results"][i]["name"]) or ("診所" in data["results"][i]["name"]):
+                    places_dict[data["results"][i]["place_id"]
+                                ] = data["results"][i]["user_ratings_total"]
+            print(places_dict)
+            # places_sort = dict(sorted(places_dict.items(),
+            #                           key=lambda x: x[1], reverse=True))
+            # print(places_sort)
+            places = list(places_dict.keys())
+            counts = len(places)
+            if counts > 2:  # 僅取前二個搜尋地點
+                counts = 2
+
+            # 使用threading
+            threads = []
+
+            for i in range(counts):
+                threads.append(threading.Thread(
+                    target=callReviewAPI, args=(places[i], keyword, result)))
+                T2 = time.perf_counter()
+                threads[i].start()
+                print("開始呼叫API："+places[i])
+                print('%s毫秒' % ((T2 - T1)*1000))
+
+            timeout = 60
+            for i in range(counts):
+                threads[i].join(timeout)
+
+            # 沒使用threading
+            # for i in range(counts):
+            #     T5 = time.perf_counter()
+            #     print("開始呼叫API："+data["results"][i]["place_id"])
+            #     print('%s毫秒' % ((T5 - T1)*1000))
+            #     callReviewAPI(data["results"][i]["place_id"], keyword, result)
+        except:
+            print("review沒資料")
+        T5 = time.perf_counter()
+        print("review好了："+'%s毫秒' % ((T5 - T1)*1000))
+        return result, 200
 
 
-def readBusiness(keyword, T1):
+def readBusiness(keyword, T1, expiredDay):
     API_KEY = get_key(".env", "API_KEY")
     SEARCH_ENGINE_ID_BUSINESS = get_key(".env", "SEARCH_ENGINE_ID_BUSINESS")
     query = keyword
@@ -177,11 +200,37 @@ def readBusiness(keyword, T1):
     result = {}
     result["data"] = []
 
-    start = (page - 1) * 10 + 1
-    url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_BUSINESS}&q={query}&start={start}"
+    con = conPool.get_connection()
+    cursor = con.cursor(buffered=True)
+    cursor.execute(
+        "SELECT link, title, createdAt FROM businessLink WHERE doctor=%s AND createdAt>%s;", (keyword, expiredDay))
+    link = cursor.fetchone()
 
-    data = requests.get(url).json()
-    try:
+    cursor.execute(
+        "SELECT author, timestamp, comment, createdAt FROM businessComment WHERE doctor=%s AND createdAt>%s;", (keyword, expiredDay))
+    data = cursor.fetchall()
+
+    cursor.close()
+    con.close()
+
+    if len(data) != 0:
+        result["url"] = link[0]
+        result["title"] = link[1]
+        result["createdAt"] = link[2]
+        for d in data:
+            item = {}
+            item["name"] = d[0]
+            item["posttime"] = untilNow(float(d[1]))
+            item["comment"] = d[2]
+            item["createdAt"] = d[3]
+            result["data"].append(item)
+        return result
+    else:
+        start = (page - 1) * 10 + 1
+        url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_BUSINESS}&q={query}&start={start}"
+
+        data = requests.get(url).json()
+        # try:
         for i in range(len(data["items"])):
             if (query+"醫師介紹和評價") in data["items"][i]["title"]:
                 link = data["items"][i]["link"]
@@ -234,12 +283,12 @@ def readBusiness(keyword, T1):
                     cursor.close()
                     con.close()
             else:
-                pass
-    except:
-        print("商周找不到資料")
-    T2 = time.perf_counter()
-    print("商周好了："+'%s毫秒' % ((T2 - T1)*1000))
-    return result, 200
+                print("商周找不到資料")
+        # except:
+        #     print("有錯誤，商周找不到資料")
+        T2 = time.perf_counter()
+        print("商周好了："+'%s毫秒' % ((T2 - T1)*1000))
+        return result, 200
 
 
 def crawlReview(inputtext):
@@ -413,68 +462,85 @@ def crawlReview(inputtext):
     return result
 
 
-def readJudgment(keyword, T1):
-    options = Options()
-    ua = UserAgent()
-    user_agent = ua.random  # 偽裝隨機產生瀏覽器、作業系統
-    options.add_argument(f'--user-agent={user_agent}')
-    options.add_argument('headless')
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('start-maximized')
-    options.add_argument("--disable-extensions")
-    options.add_argument('--disable-browser-side-navigation')
-    options.add_argument('enable-automation')
-    options.add_argument('--disable-infobars')
-    options.add_argument('enable-features=NetworkServiceInProcess')
-    options.add_argument('--disable-dev-shm-usage')
-
-    options.add_experimental_option("detach", True)  # 加入後不會閃退
-    options.page_load_strategy = 'normal'
-    driver = webdriver.Chrome(options=options)
-    driver.maximize_window()
+def readJudgment(keyword, T1, expiredDay):
     result = {}
     result["data"] = []
 
-    try:
-        driver.get("https://judgment.judicial.gov.tw/FJUD/default.aspx")
-        Input = driver.find_element(By.ID, 'txtKW')
-        Input.send_keys('(被告'+keyword+'+被上訴人'+keyword+'+相對人' +
-                        keyword+'+被告醫院之履行輔助人'+keyword+')&(醫生+醫師)')
-        Btn = driver.find_element(By.ID, 'btnSimpleQry')
-        Btn.send_keys(Keys.ENTER)
-        driver.switch_to.frame('iframe-data')
+    con = conPool.get_connection()
+    cursor = con.cursor()
+    cursor.execute(
+        "SELECT link, title FROM judgment WHERE doctor=%s AND createdAt>%s;", (keyword, expiredDay))
+    data = cursor.fetchall()
+    cursor.close()
+    con.close()
 
-        time.sleep(1)
-        links = driver.find_elements(By.CLASS_NAME, 'hlTitle_scroll')
-        # tags = driver.find_elements(By.CLASS_NAME, 'tdCut')
-
-        for l in links:
-            link = l.get_attribute("href")
-            title = l.text
-
+    if len(data) != 0:
+        for d in data:
             item = {}
-            item["url"] = link
-            item["title"] = title
+            item["url"] = d[0]
+            item["title"] = d[1]
             result["data"].append(item)
+        return result
+    else:
+        options = Options()
+        ua = UserAgent()
+        user_agent = ua.random  # 偽裝隨機產生瀏覽器、作業系統
+        options.add_argument(f'--user-agent={user_agent}')
+        options.add_argument('headless')
+        options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('start-maximized')
+        options.add_argument("--disable-extensions")
+        options.add_argument('--disable-browser-side-navigation')
+        options.add_argument('enable-automation')
+        options.add_argument('--disable-infobars')
+        options.add_argument('enable-features=NetworkServiceInProcess')
+        options.add_argument('--disable-dev-shm-usage')
 
-            con = conPool.get_connection()
-            cursor = con.cursor()
-            cursor.execute(
-                "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (keyword, link, title))
-            con.commit()
-            cursor.close()
-            con.close()
+        options.add_experimental_option("detach", True)  # 加入後不會閃退
+        options.page_load_strategy = 'normal'
+        driver = webdriver.Chrome(options=options)
+        driver.maximize_window()
 
-        driver.close()
-        driver.quit()
-    except:
-        print("司法院找不到資料")
+        try:
+            driver.get("https://judgment.judicial.gov.tw/FJUD/default.aspx")
+            Input = driver.find_element(By.ID, 'txtKW')
+            Input.send_keys('(被告'+keyword+'+被上訴人'+keyword+'+相對人' +
+                            keyword+'+被告醫院之履行輔助人'+keyword+')&(醫生+醫師)')
+            Btn = driver.find_element(By.ID, 'btnSimpleQry')
+            Btn.send_keys(Keys.ENTER)
+            driver.switch_to.frame('iframe-data')
 
-    T2 = time.perf_counter()
-    print("司法院好了："+'%s毫秒' % ((T2 - T1)*1000))
-    return result, 200
+            time.sleep(1)
+            links = driver.find_elements(By.CLASS_NAME, 'hlTitle_scroll')
+            # tags = driver.find_elements(By.CLASS_NAME, 'tdCut')
+
+            for l in links:
+                link = l.get_attribute("href")
+                title = l.text
+
+                item = {}
+                item["url"] = link
+                item["title"] = title
+                result["data"].append(item)
+
+                con = conPool.get_connection()
+                cursor = con.cursor()
+                cursor.execute(
+                    "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (keyword, link, title))
+                con.commit()
+                cursor.close()
+                con.close()
+
+            driver.close()
+            driver.quit()
+        except:
+            print("司法院找不到資料")
+
+        T2 = time.perf_counter()
+        print("司法院好了："+'%s毫秒' % ((T2 - T1)*1000))
+        return result, 200
 
 
 def readThank(keyword):
@@ -501,110 +567,103 @@ def viewThank(data):
     return result
 
 
-def readPtt(keyword, T1):
-    API_KEY = get_key(".env", "API_KEY")
-    SEARCH_ENGINE_ID_PTT = get_key(".env", "SEARCH_ENGINE_ID_PTT")
-    query = keyword + "醫生"
-    page = 1
+def readPtt(keyword, T1, expiredDay):
     result = {}
     result["data"] = []
 
-    while True:
+    con = conPool.get_connection()
+    cursor = con.cursor()
+    cursor.execute(
+        "SELECT link, title, text FROM Ptt WHERE doctor=%s AND createdAt>%s;", (keyword, expiredDay))
+    data = cursor.fetchall()
+    cursor.close()
+    con.close()
+
+    if len(data) != 0:
+        for d in data:
+            item = {}
+            item["url"] = d[0]
+            item["title"] = d[1]
+            item["text"] = d[2]
+            result["data"].append(item)
+        return result
+    else:
+        API_KEY = get_key(".env", "API_KEY")
+        SEARCH_ENGINE_ID_PTT = get_key(".env", "SEARCH_ENGINE_ID_PTT")
+        query = keyword + '+"醫生"'
+        page = 1
+        while page < 6:
+            start = (page - 1) * 10 + 1
+            url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_PTT}&q={query}&start={start}"
+
+            data = requests.get(url).json()
+            try:
+                for i in range(len(data["items"])):
+                    boards = ["Doctor-Info", "allergy", "Anti-Cancer", "Nurse",
+                              "BabyMother", "BigPeitou", "BigShiLin", "GoodPregnan", "Laser_eye"]
+                    for board in boards:
+                        if board in data["items"][i]["link"]:
+                            if ("徵才" not in data["items"][i]["title"] and "新聞" not in data["items"][i]["title"] and keyword in data["items"][i]["snippet"]):
+
+                                link = data["items"][i]["link"]
+                                title = data["items"][i]["title"]
+                                text = data["items"][i]["snippet"]
+
+                                item = {}
+                                item["url"] = link
+                                item["title"] = title
+                                item["text"] = text
+                                result["data"].append(item)
+
+                                con = conPool.get_connection()
+                                cursor = con.cursor()
+                                cursor.execute(
+                                    "INSERT INTO Ptt (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (keyword, link, title, text))
+                                con.commit()
+                                cursor.close()
+                                con.close()
+
+                page += 1
+            except:
+                break
+
+        T2 = time.perf_counter()
+        print("Ptt好了："+'%s毫秒' % ((T2 - T1)*1000))
+        return result, 200
+
+
+def readSearch(keyword, T1, expiredDay):
+    result = {}
+    result["data"] = []
+
+    con = conPool.get_connection()
+    cursor = con.cursor()
+    cursor.execute(
+        "SELECT link, title, text FROM search WHERE doctor=%s AND createdAt>%s;", (keyword, expiredDay))
+    data = cursor.fetchall()
+    cursor.close()
+    con.close()
+
+    if len(data) != 0:
+        for d in data:
+            item = {}
+            item["url"] = d[0]
+            item["title"] = d[1]
+            item["text"] = d[2]
+            result["data"].append(item)
+        return result
+    else:
+        API_KEY = get_key(".env", "API_KEY")
+        SEARCH_ENGINE_ID_ALL = get_key(".env", "SEARCH_ENGINE_ID_ALL")
+        query = keyword+'+"醫院"'+'+"感謝"'
+        page = 1
+
         start = (page - 1) * 10 + 1
-        url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_PTT}&q={query}&start={start}"
+        url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_ALL}&q={query}&start={start}"
 
         data = requests.get(url).json()
         try:
             for i in range(len(data["items"])):
-                boards = ["Doctor-Info", "allergy", "Anti-Cancer", "Nurse",
-                          "BabyMother", "BigPeitou", "BigShiLin", "GoodPregnan", ]
-                for board in boards:
-                    if board in data["items"][i]["link"]:
-                        if ("徵才" not in data["items"][i]["title"] and "新聞" not in data["items"][i]["title"] and keyword in data["items"][i]["snippet"]):
-
-                            link = data["items"][i]["link"]
-                            title = data["items"][i]["title"]
-                            text = data["items"][i]["snippet"]
-
-                            item = {}
-                            item["url"] = link
-                            item["title"] = title
-                            item["text"] = text
-                            result["data"].append(item)
-
-                            con = conPool.get_connection()
-                            cursor = con.cursor()
-                            cursor.execute(
-                                "INSERT INTO Ptt (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (keyword, link, title, text))
-                            con.commit()
-                            cursor.close()
-                            con.close()
-
-            page += 1
-        except:
-            break
-
-    T2 = time.perf_counter()
-    print("Ptt好了："+'%s毫秒' % ((T2 - T1)*1000))
-    return result, 200
-
-
-def readSearch(keyword, T1):
-    API_KEY = get_key(".env", "API_KEY")
-    SEARCH_ENGINE_ID_ALL = get_key(".env", "SEARCH_ENGINE_ID_ALL")
-    query = keyword+"醫"+"感謝"
-    page = 1
-    result = {}
-    result["data"] = []
-
-    start = (page - 1) * 10 + 1
-    url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_ALL}&q={query}&start={start}"
-
-    data = requests.get(url).json()
-    try:
-        for i in range(len(data["items"])):
-            if keyword in data["items"][i]["title"] or keyword in data["items"][i]["snippet"]:
-
-                link = data["items"][i]["link"]
-                title = data["items"][i]["title"]
-                text = data["items"][i]["snippet"]
-
-                item = {}
-                item["url"] = link
-                item["title"] = title
-                item["text"] = text
-                result["data"].append(item)
-
-                con = conPool.get_connection()
-                cursor = con.cursor()
-                cursor.execute(
-                    "INSERT INTO search (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (keyword, link, title, text))
-                con.commit()
-                cursor.close()
-                con.close()
-    except:
-        print("Search沒資料")
-
-    T2 = time.perf_counter()
-    print("Search好了："+'%s毫秒' % ((T2 - T1)*1000))
-    return result, 200
-
-
-def readBlog(keyword, T1):
-    API_KEY = get_key(".env", "API_KEY")
-    SEARCH_ENGINE_ID_BLOG = get_key(".env", "SEARCH_ENGINE_ID_BLOG")
-    query = '"'+keyword+'"+"醫"'
-    page = 1
-    result = {}
-    result["data"] = []
-
-    start = (page - 1) * 10 + 1
-    url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_BLOG}&q={query}&start={start}"
-
-    data = requests.get(url).json()
-    try:
-        for i in range(len(data["items"])):
-            if "580913" not in data["items"][i]["title"]:
                 if keyword in data["items"][i]["title"] or keyword in data["items"][i]["snippet"]:
 
                     link = data["items"][i]["link"]
@@ -620,16 +679,76 @@ def readBlog(keyword, T1):
                     con = conPool.get_connection()
                     cursor = con.cursor()
                     cursor.execute(
-                        "INSERT INTO blog (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (keyword, link, title, text))
+                        "INSERT INTO search (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (keyword, link, title, text))
                     con.commit()
                     cursor.close()
                     con.close()
+        except:
+            print("Search沒資料")
 
-    except:
-        print("Blog沒資料")
-    T2 = time.perf_counter()
-    print("Blog好了："+'%s毫秒' % ((T2 - T1)*1000))
-    return result, 200
+        T2 = time.perf_counter()
+        print("Search好了："+'%s毫秒' % ((T2 - T1)*1000))
+        return result, 200
+
+
+def readBlog(keyword, T1, expiredDay):
+    result = {}
+    result["data"] = []
+
+    con = conPool.get_connection()
+    cursor = con.cursor()
+    cursor.execute(
+        "SELECT link, title, text FROM blog WHERE doctor=%s AND createdAt>%s;", (keyword, expiredDay))
+    data = cursor.fetchall()
+    cursor.close()
+    con.close()
+
+    if len(data) != 0:
+        for d in data:
+            item = {}
+            item["url"] = d[0]
+            item["title"] = d[1]
+            item["text"] = d[2]
+            result["data"].append(item)
+        return result
+    else:
+        API_KEY = get_key(".env", "API_KEY")
+        SEARCH_ENGINE_ID_BLOG = get_key(".env", "SEARCH_ENGINE_ID_BLOG")
+        query = '"'+keyword+'"'+'"醫"'
+        page = 1
+
+        start = (page - 1) * 10 + 1
+        url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_BLOG}&q={query}&start={start}"
+
+        data = requests.get(url).json()
+        try:
+            for i in range(len(data["items"])):
+                if "580913" not in data["items"][i]["title"]:
+                    if keyword in data["items"][i]["title"] or keyword in data["items"][i]["snippet"]:
+
+                        link = data["items"][i]["link"]
+                        title = data["items"][i]["title"]
+                        text = data["items"][i]["snippet"]
+
+                        item = {}
+                        item["url"] = link
+                        item["title"] = title
+                        item["text"] = text
+                        result["data"].append(item)
+
+                        con = conPool.get_connection()
+                        cursor = con.cursor()
+                        cursor.execute(
+                            "INSERT INTO blog (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (keyword, link, title, text))
+                        con.commit()
+                        cursor.close()
+                        con.close()
+
+        except:
+            print("Blog沒資料")
+        T2 = time.perf_counter()
+        print("Blog好了："+'%s毫秒' % ((T2 - T1)*1000))
+        return result, 200
 
 
 mysql_user = get_key(".env", "user")
@@ -692,61 +811,68 @@ def getthank(keyword):
 @app.route("/api/Ptt/<keyword>")
 def getPtt(keyword):
     T1 = time.perf_counter()
-    result = readPtt(keyword, T1)
+    expiredDay = datetime.today().date() - timedelta(days=7)
+    result = readPtt(keyword, T1, expiredDay)
     return result
 
 
 @app.route("/api/search/<keyword>")
 def getSearch(keyword):
     T1 = time.perf_counter()
-    result = readSearch(keyword, T1)
+    expiredDay = datetime.today().date() - timedelta(days=7)
+    result = readSearch(keyword, T1, expiredDay)
     return result
 
 
 @app.route("/api/blog/<keyword>")
 def getBlog(keyword):
     T1 = time.perf_counter()
-    result = readBlog(keyword, T1)
+    expiredDay = datetime.today().date() - timedelta(days=7)
+    result = readBlog(keyword, T1, expiredDay)
     return result
 
 
 @app.route("/api/judgment/<keyword>")
 def getJudgment(keyword):
     T1 = time.perf_counter()
-    result = readJudgment(keyword, T1)
+    expiredDay = datetime.today().date() - timedelta(days=7)
+    result = readJudgment(keyword, T1, expiredDay)
     return result
 
 
 @app.route("/api/review/<inputtext>")
 def getReview(inputtext):
     T1 = time.perf_counter()
-    result = readReview(inputtext, T1)
+    expiredDay = datetime.today().date() - timedelta(days=7)
+    result = readReview(inputtext, T1, expiredDay)
     return result
 
 
 @app.route("/api/business/<keyword>")
 def getBusiness(keyword):
     T1 = time.perf_counter()
-    result = readBusiness(keyword, T1)
+    expiredDay = datetime.today().date() - timedelta(days=7)
+    result = readBusiness(keyword, T1, expiredDay)
     return result
 
 
 @app.route("/api/<keyword>")
 def getAll(keyword):
     T1 = time.perf_counter()
+    expiredDay = datetime.today().date() - timedelta(days=7)
     threads = []
     threads.append(threading.Thread(target=readReview,
-                   args=(keyword, T1)))
+                   args=(keyword, T1, expiredDay)))
     threads.append(threading.Thread(target=readBusiness,
-                   args=(keyword, T1)))
+                   args=(keyword, T1, expiredDay)))
     threads.append(threading.Thread(target=readJudgment,
-                   args=(keyword, T1)))
+                   args=(keyword, T1, expiredDay)))
     threads.append(threading.Thread(target=readPtt,
-                   args=(keyword, T1)))
+                   args=(keyword, T1, expiredDay)))
     threads.append(threading.Thread(target=readSearch,
-                   args=(keyword, T1)))
+                   args=(keyword, T1, expiredDay)))
     threads.append(threading.Thread(target=readBlog,
-                   args=(keyword, T1)))
+                   args=(keyword, T1, expiredDay)))
     for i in range(6):
         threads[i].start()
 
