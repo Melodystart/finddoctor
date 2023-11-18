@@ -913,16 +913,4 @@ def crawl(inputtext):
     return result
 
 
-# def task():
-#     print("Job Executing!")
-
-# def func():
-#     schedule.every(3).seconds.do(task)
-#     while True:
-#         schedule.run_pending()
-#         time.sleep(2)
-
-# thread = threading.Thread(target=func)
-# thread.start()
-
 app.run(host="0.0.0.0", port=8080)

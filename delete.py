@@ -2,8 +2,7 @@ from mysql.connector import pooling
 from datetime import datetime, timedelta
 from dotenv import get_key
 
-# expiredDay = datetime.today().date() - timedelta(days=7)
-expiredDay = datetime.today().date() + timedelta(days=7)
+expiredDay = datetime.today().date() - timedelta(days=0)  # 刪除昨日以前的資料
 
 conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
     ".env", "password"), host='localhost', database='finddoctor', pool_name='findConPool', pool_size=10,  auth_plugin='mysql_native_password')

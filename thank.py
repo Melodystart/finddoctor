@@ -14,15 +14,7 @@ con = mysql.connector.connect(
 cursor = con.cursor()
 
 # 建立table
-cursor.execute("DROP database IF EXISTS finddoctor;")
-cursor.execute("CREATE database finddoctor;")
 cursor.execute("USE finddoctor;")
-cursor.execute("DROP table IF EXISTS thank;")
-cursor.execute("DROP table IF EXISTS thankUrl;")
-cursor.execute(
-    "CREATE table thank (id BIGINT PRIMARY KEY auto_increment,month VARCHAR(255),target TEXT,content TEXT NOT NULL);")
-cursor.execute(
-    "CREATE table thankUrl (id BIGINT PRIMARY KEY auto_increment,month VARCHAR(255),url TEXT NOT NULL);")
 
 
 def thankPDF(title, url):
@@ -161,18 +153,27 @@ for td in result:
         title = item[0].find('span').text
         url = item[0].get("href")
 
-        if "../" in url:
-            url = "https://www.vghtpe.gov.tw/" + url.replace("../", "")
-            thankPDF(title, url)
-        elif ".pdf" in url:
-            thankPDF(title, url)
-        else:
-            thankWEB(title, url)
-
-        # 每月感謝函名稱、URL
+        # 確認感謝函月份是否已存於資料庫
         cursor.execute(
-            "INSERT INTO thankUrl (month, url) VALUES (%s, %s)", (title, url))
-        con.commit()
+            "SELECT month FROM thankUrl WHERE month=%s;", (title,))
+        data = cursor.fetchone()
+
+        if data == None:
+            if "../" in url:
+                url = "https://www.vghtpe.gov.tw/" + url.replace("../", "")
+                thankPDF(title, url)
+            elif ".pdf" in url:
+                thankPDF(title, url)
+            else:
+                thankWEB(title, url)
+
+            # 感謝函名稱、URL存放於資料庫
+            cursor.execute(
+                "INSERT INTO thankUrl (month, url) VALUES (%s, %s)", (title, url))
+            con.commit()
+
+        else:
+            break
 
 cursor.close()
 con.close()
