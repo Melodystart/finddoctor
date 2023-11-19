@@ -940,7 +940,7 @@ def updatedata():
 
 scheduler = BackgroundScheduler(timezone="Asia/Taipei")
 scheduler.add_job(updatedata, 'cron',
-                  day_of_week="mon-sun", hour=0, minute=3)
+                  day_of_week="mon-sun", hour=0, minute=17)
 scheduler.start()
 
 app.run(host="0.0.0.0", port=8080)
