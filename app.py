@@ -14,9 +14,22 @@ import threading
 from outscraper import ApiClient
 from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
+from apscheduler.schedulers.background import BackgroundScheduler
 
 conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
     ".env", "password"), host='localhost', database='finddoctor', pool_name='findConPool', pool_size=10,  auth_plugin='mysql_native_password')
+
+mysql_user = get_key(".env", "user")
+mysql_password = get_key(".env", "password")
+
+toDay = datetime.today().date()
+expiredDay = toDay - timedelta(days=1)  # 設定資料期限為1天前到期
+
+app = Flask(
+    __name__,
+    static_folder="public",
+    static_url_path="/"
+)
 
 
 def error(result, message):
@@ -177,12 +190,6 @@ def readReview(inputtext, T1, expiredDay):
             for i in range(counts):
                 threads[i].join(timeout)
 
-            # 沒使用threading
-            # for i in range(counts):
-            #     T5 = time.perf_counter()
-            #     print("開始呼叫API："+data["results"][i]["place_id"])
-            #     print('%s毫秒' % ((T5 - T1)*1000))
-            #     callReviewAPI(data["results"][i]["place_id"], keyword, result)
         except:
             print("review沒資料")
         T5 = time.perf_counter()
@@ -660,7 +667,7 @@ def readSearch(keyword, T1, expiredDay):
     else:
         API_KEY = get_key(".env", "API_KEY")
         SEARCH_ENGINE_ID_ALL = get_key(".env", "SEARCH_ENGINE_ID_ALL")
-        query = keyword+'+"醫院"'+'+"感謝"'
+        query = keyword+'+醫'+'+感謝'
         page = 1
 
         start = (page - 1) * 10 + 1
@@ -756,16 +763,6 @@ def readBlog(keyword, T1, expiredDay):
         return result, 200
 
 
-mysql_user = get_key(".env", "user")
-mysql_password = get_key(".env", "password")
-
-app = Flask(
-    __name__,
-    static_folder="public",
-    static_url_path="/"
-)
-
-
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -816,7 +813,6 @@ def getthank(keyword):
 @app.route("/api/Ptt/<keyword>")
 def getPtt(keyword):
     T1 = time.perf_counter()
-    expiredDay = datetime.today().date() - timedelta(days=7)
     result = readPtt(keyword, T1, expiredDay)
     return result
 
@@ -824,7 +820,6 @@ def getPtt(keyword):
 @app.route("/api/search/<keyword>")
 def getSearch(keyword):
     T1 = time.perf_counter()
-    expiredDay = datetime.today().date() - timedelta(days=7)
     result = readSearch(keyword, T1, expiredDay)
     return result
 
@@ -832,7 +827,6 @@ def getSearch(keyword):
 @app.route("/api/blog/<keyword>")
 def getBlog(keyword):
     T1 = time.perf_counter()
-    expiredDay = datetime.today().date() - timedelta(days=7)
     result = readBlog(keyword, T1, expiredDay)
     return result
 
@@ -840,7 +834,6 @@ def getBlog(keyword):
 @app.route("/api/judgment/<keyword>")
 def getJudgment(keyword):
     T1 = time.perf_counter()
-    expiredDay = datetime.today().date() - timedelta(days=7)
     result = readJudgment(keyword, T1, expiredDay)
     return result
 
@@ -848,7 +841,6 @@ def getJudgment(keyword):
 @app.route("/api/review/<inputtext>")
 def getReview(inputtext):
     T1 = time.perf_counter()
-    expiredDay = datetime.today().date() - timedelta(days=7)
     result = readReview(inputtext, T1, expiredDay)
     return result
 
@@ -856,7 +848,6 @@ def getReview(inputtext):
 @app.route("/api/business/<keyword>")
 def getBusiness(keyword):
     T1 = time.perf_counter()
-    expiredDay = datetime.today().date() - timedelta(days=7)
     result = readBusiness(keyword, T1, expiredDay)
     return result
 
@@ -876,7 +867,6 @@ def getAll(keyword):
     cursor.close()
     con.close()
 
-    expiredDay = datetime.today().date() - timedelta(days=7)
     threads = []
     threads.append(threading.Thread(target=readReview,
                    args=(keyword, T1, expiredDay)))
@@ -912,5 +902,45 @@ def crawl(inputtext):
     print('%s毫秒' % ((T2 - T1)*1000))
     return result
 
+
+def updatedata():
+    T1 = time.perf_counter()
+    con = conPool.get_connection()
+    cursor = con.cursor()
+    # 刪除過期資料
+    cursor.execute("DELETE FROM newest WHERE createdAt<=%s;", (expiredDay,))
+    con.commit()
+    cursor.execute("DELETE FROM review WHERE createdAt<=%s;", (expiredDay,))
+    con.commit()
+    cursor.execute(
+        "DELETE FROM businessComment WHERE createdAt<=%s;", (expiredDay,))
+    con.commit()
+    cursor.execute(
+        "DELETE FROM businessLink WHERE createdAt<=%s;", (expiredDay,))
+    con.commit()
+    cursor.execute("DELETE FROM judgment WHERE createdAt<=%s;", (expiredDay,))
+    con.commit()
+    cursor.execute("DELETE FROM Ptt WHERE createdAt<=%s;", (expiredDay,))
+    con.commit()
+    cursor.execute("DELETE FROM search WHERE createdAt<=%s;", (expiredDay,))
+    con.commit()
+    cursor.execute("DELETE FROM blog WHERE createdAt<=%s;", (expiredDay,))
+    con.commit()
+    # 更新過去一周熱搜前十名資料
+    cursor.execute(
+        "SELECT doctor, count(doctor) AS counter FROM record WHERE createdAt < %s AND createdAt >= %s group by(doctor) ORDER BY counter DESC LIMIT 10;", (toDay, expiredDay))
+    data = cursor.fetchall()
+    cursor.close()
+    con.close()
+    for d in data:
+        print(d)
+        keyword = d[0]
+        getAll(keyword)
+
+
+scheduler = BackgroundScheduler(timezone="Asia/Taipei")
+scheduler.add_job(updatedata, 'cron',
+                  day_of_week="mon-sun", hour=0, minute=3)
+scheduler.start()
 
 app.run(host="0.0.0.0", port=8080)
