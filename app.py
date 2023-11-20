@@ -946,7 +946,7 @@ def hi():
 scheduler = BackgroundScheduler(timezone="Asia/Taipei")
 
 # 2-1. interval 固定間隔模式：每1秒執行hi函式
-scheduler.add_job(hi, 'interval', seconds=10)
+# scheduler.add_job(hi, 'interval', seconds=10)
 
 # 2-2. cron 指定某時段執行： 每天 0點00分執行updatedata函式
 scheduler.add_job(updatedata, 'cron',
