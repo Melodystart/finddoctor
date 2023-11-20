@@ -667,7 +667,7 @@ def readSearch(keyword, T1, expiredDay):
     else:
         API_KEY = get_key(".env", "API_KEY")
         SEARCH_ENGINE_ID_ALL = get_key(".env", "SEARCH_ENGINE_ID_ALL")
-        query = keyword+'+醫'+'+感謝'
+        query = '"'+keyword+'"'+'+"醫"'+'+"感謝函"'
         page = 1
 
         start = (page - 1) * 10 + 1
@@ -726,7 +726,7 @@ def readBlog(keyword, T1, expiredDay):
     else:
         API_KEY = get_key(".env", "API_KEY")
         SEARCH_ENGINE_ID_BLOG = get_key(".env", "SEARCH_ENGINE_ID_BLOG")
-        query = '"'+keyword+'"'+'"醫"'
+        query = '"'+keyword+'"'+'+醫生'+'+醫師'
         page = 1
 
         start = (page - 1) * 10 + 1
@@ -938,9 +938,21 @@ def updatedata():
         getAll(keyword)
 
 
+def hi():
+    print("Hi apscheduler")
+
+
+# 1. 指定BackgroundScheduler不會阻塞主程式app的執行 v.s BlockingScheduler
 scheduler = BackgroundScheduler(timezone="Asia/Taipei")
+
+# 2-1. interval 固定間隔模式：每1秒執行hi函式
+scheduler.add_job(hi, 'interval', seconds=1)
+
+# 2-2. cron 指定某時段執行： 每天 0點00分執行updatedata函式
 scheduler.add_job(updatedata, 'cron',
-                  day_of_week="mon-sun", hour=0, minute=17)
+                  day_of_week="mon-sun", hour=0, minute=00)
+
+# 3. 排程開始
 scheduler.start()
 
 app.run(host="0.0.0.0", port=8080)
