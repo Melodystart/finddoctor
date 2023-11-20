@@ -38,3 +38,9 @@ cursor.execute(
     "CREATE table search (id BIGINT PRIMARY KEY auto_increment,doctor VARCHAR(255),link TEXT,title TEXT, text TEXT, createdAt DATE DEFAULT (CURRENT_DATE));")
 cursor.execute(
     "CREATE table blog (id BIGINT PRIMARY KEY auto_increment,doctor VARCHAR(255),link TEXT,title TEXT, text TEXT, createdAt DATE DEFAULT (CURRENT_DATE));")
+
+cursor.execute("DROP database IF EXISTS test;")
+cursor.execute("CREATE database test;")
+cursor.execute("USE test;")
+cursor.execute(
+    "CREATE table hello (id BIGINT PRIMARY KEY auto_increment,text VARCHAR(255), createdAt TIMESTAMP DEFAULT (CURRENT_TIMESTAMP));")

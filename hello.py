@@ -1,8 +1,22 @@
+import mysql.connector
+from mysql.connector import pooling
 
-print("Hello crontab!")
+con = mysql.connector.connect(
+    host='localhost',
+    user='root',
+    password='password',
+)
+cursor = con.cursor()
+
+cursor.execute("USE test;")
+cursor.execute(
+    "INSERT INTO hello (text) VALUES (%s)", ("Hello crontab", ))
+con.commit()
+cursor.close()
+con.close()
 
 
-# 1. 編輯排程 
+# 1. 編輯排程
 # crontab -e
 
 # 2. 指令
@@ -19,8 +33,8 @@ print("Hello crontab!")
 # 每周日7:30 cd到資料夾finddoctor後，再執行thank.py檔爬蟲網頁/pdf檔
 # 30 07 * * 0 cd /home/ubuntu/finddoctor && python3 /home/ubuntu/finddoctor/thank.py
 
-# 3. 編輯後重啟排程 
+# 3. 編輯後重啟排程
 # sudo service cron restart
 
-# 4. 查看排程日誌 
+# 4. 查看排程日誌
 # grep CRON /var/log/syslog
