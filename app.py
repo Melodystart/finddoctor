@@ -76,7 +76,7 @@ def readReview(inputtext, T1, expiredDay):
         api_client = ApiClient(
             api_key=get_key(".env", "review_api_key"))
         results = api_client.google_maps_reviews(
-            place_id, reviews_limit=3, reviews_query=keyword, sort="newest", language="zh-TW", region="TW")
+            place_id, reviews_limit=1, reviews_query=keyword, sort="newest", language="zh-TW", region="TW")
         try:
             T3 = time.perf_counter()
             reviews = results[0]["reviews_data"]
@@ -172,8 +172,8 @@ def readReview(inputtext, T1, expiredDay):
             # print(places_sort)
             places = list(places_dict.keys())
             counts = len(places)
-            if counts > 5:  # 僅取前5個搜尋地點
-                counts = 5
+            if counts > 3:  # 僅取前3個搜尋地點
+                counts = 3
 
             # 使用threading
             threads = []
