@@ -15,7 +15,6 @@
     <a class="logo" href="/">FindDoctor</a>
     <div class="keyword">
       <input class="doctor" placeholder="請輸入醫生名稱">
-      <input class="department" placeholder="科別">
       <i class="fas fa-search"></i>
     </div>
   </div>
@@ -93,7 +92,13 @@
     const search = document.querySelector(".doctor").value
     return window.location.href = "/judgment?search=" + search
   })
-
+  const input = document.querySelector(".doctor")
+  input.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+      const search = document.querySelector(".doctor").value
+      return window.location.href = "/judgment?search=" + search
+    }
+  })
   document.querySelector(".thank").href = "/thank?search=" + document.querySelector(".doctor").value
   document.querySelector(".search").href = "/search?search=" + document.querySelector(".doctor").value
   document.querySelector(".Ptt").href = "/Ptt?search=" + document.querySelector(".doctor").value

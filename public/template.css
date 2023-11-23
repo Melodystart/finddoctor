@@ -44,10 +44,11 @@ a {
 }
 
 .doctor {
-  margin: 10px 0px 10px 15px;
+  margin: 10px 35px 10px 15px;
   display: flex;
   align-items: center;
   background-color: #F6F6F6;
+  width: 100%;
 }
 
 input {

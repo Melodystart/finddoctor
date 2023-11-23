@@ -15,7 +15,6 @@
     <a class="logo" href="/">FindDoctor</a>
     <div class="keyword">
       <input class="doctor" placeholder="請輸入醫生名稱">
-      <input class="department" placeholder="科別">
       <i class="fas fa-search"></i>
     </div>
   </div>
@@ -69,9 +68,8 @@
           <div class="content" style="color:#f76b8a;">搜尋不到資料</div>
           <div class="from">搜尋關鍵字可嘗試僅輸入醫生名稱，例如：王大明</div>`
         } else {
-          contentContainer.innerHTML = `<div class="from"><a href="${result["url"]}" target="_blank" style="color:#4ACFAC;">資料來源：${result["title"]}</a></div>`;
+          contentContainer.innerHTML = ""
           const data = result["data"]
-
           data.forEach(d => {
             const content = document.createElement("div");
             content.classList.add("content");
@@ -79,9 +77,9 @@
             text = d["comment"].replace(keyword, `<span class="highlight">${keyword}</span>`)
 
             content.innerHTML = `
-            <span class="content-title">${d["posttime"]}</span>
-            <span class="content-name">@${d["name"]}</span>
-              <div class="content-text">${text}</div>`
+            <a href="${d["link"]}" target="_blank"><span class="content-title">${d["posttime"]}</span>
+            <span class="content-name">@${d["name"]}．${d["location"]}</span>
+              <div class="content-text">${text}</div></a>`
             contentContainer.appendChild(content);
           })
         }
@@ -97,7 +95,13 @@
     const search = document.querySelector(".doctor").value
     return window.location.href = "/business?search=" + search
   })
-
+  const input = document.querySelector(".doctor")
+  input.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+      const search = document.querySelector(".doctor").value
+      return window.location.href = "/business?search=" + search
+    }
+  })
   document.querySelector(".thank").href = "/thank?search=" + document.querySelector(".doctor").value
   document.querySelector(".search").href = "/search?search=" + document.querySelector(".doctor").value
   document.querySelector(".Ptt").href = "/Ptt?search=" + document.querySelector(".doctor").value

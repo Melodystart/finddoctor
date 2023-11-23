@@ -15,7 +15,6 @@
     <a class="logo" href="/">FindDoctor</a>
     <div class="keyword">
       <input class="doctor" placeholder="請輸入醫生名稱">
-      <input class="department" placeholder="科別">
       <i class="fas fa-search"></i>
     </div>
   </div>
@@ -78,8 +77,8 @@
             const content = document.createElement("div");
             content.classList.add("content");
 
-            title = d["title"].replace(keyword, `<span class="highlight">${keyword}</span>`)
-            text = d["text"].replace(keyword, `<span class="highlight">${keyword}</span>`)
+            title = d["title"].replaceAll(keyword, `<span class="highlight">${keyword}</span>`)
+            text = d["text"].replaceAll(keyword, `<span class="highlight">${keyword}</span>`)
 
             content.innerHTML = `
               <div class="content-title"><a class="content-link" href="${d["url"]}" target="_blank">${d["when"]}：${title}</a>
@@ -99,7 +98,13 @@
     const search = document.querySelector(".doctor").value
     return window.location.href = "/thank?search=" + search
   })
-
+  const input = document.querySelector(".doctor")
+  input.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+      const search = document.querySelector(".doctor").value
+      return window.location.href = "/thank?search=" + search
+    }
+  })
   document.querySelector(".thank").href = "/thank?search=" + document.querySelector(".doctor").value
   document.querySelector(".search").href = "/search?search=" + document.querySelector(".doctor").value
   document.querySelector(".Ptt").href = "/Ptt?search=" + document.querySelector(".doctor").value

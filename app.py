@@ -107,7 +107,7 @@ def readReview(inputtext, T1, expiredDay):
                     con = conPool.get_connection()
                     cursor = con.cursor()
                     cursor.execute(
-                        "INSERT INTO review (doctor, author, star, timestamp, review, link, location ) VALUES (%s, %s,%s, %s, %s,%s,%s)", (keyword, author, review_rating, review_timestamp, review, review_link, location))
+                        "INSERT INTO review (doctor, author, star, timestamp, review, link, location ) VALUES (%s, %s,%s, %s, %s,%s,%s)", (inputtext, author, review_rating, review_timestamp, review, review_link, location))
                     con.commit()
                     cursor.close()
                     con.close()
@@ -125,10 +125,10 @@ def readReview(inputtext, T1, expiredDay):
 
     try:
         keyword = inputtext.split()[0]
-        location = inputtext.split()[1]
+        # location = inputtext.split()[1]
     except:
         keyword = inputtext
-        location = ""
+        # location = ""
 
     result = {}
     result["data"] = []
@@ -136,7 +136,7 @@ def readReview(inputtext, T1, expiredDay):
     con = conPool.get_connection()
     cursor = con.cursor()
     cursor.execute(
-        "SELECT author, star, timestamp, review, link, location FROM review WHERE doctor=%s AND createdAt>%s;", (keyword, expiredDay))
+        "SELECT author, star, timestamp, review, link, location FROM review WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
     data = cursor.fetchall()
     cursor.close()
     con.close()
@@ -146,7 +146,10 @@ def readReview(inputtext, T1, expiredDay):
             item = {}
             item["name"] = d[0]
             item["star"] = d[1]
-            item["when"] = untilNow(float(d[2]))
+            try:
+                item["when"] = untilNow(float(d[2]))
+            except:
+                pass
             item["review"] = d[3]
             item["link"] = d[4]
             item["location"] = d[5]
@@ -189,9 +192,22 @@ def readReview(inputtext, T1, expiredDay):
             timeout = 60
             for i in range(counts):
                 threads[i].join(timeout)
-
         except:
-            print("review沒資料")
+            print("review有錯誤")
+            pass
+
+        con = conPool.get_connection()
+        cursor = con.cursor()
+        cursor.execute(
+            "SELECT * FROM review WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
+        data = cursor.fetchall()
+        if len(data) == 0:
+            cursor.execute(
+                "INSERT INTO review (doctor, review) VALUES (%s, %s)", (inputtext, ""))
+            con.commit()
+        cursor.close()
+        con.close()
+
         T5 = time.perf_counter()
         print("review好了："+'%s毫秒' % ((T5 - T1)*1000))
         return result, 200
@@ -200,34 +216,31 @@ def readReview(inputtext, T1, expiredDay):
 def readBusiness(keyword, T1, expiredDay):
     API_KEY = get_key(".env", "API_KEY")
     SEARCH_ENGINE_ID_BUSINESS = get_key(".env", "SEARCH_ENGINE_ID_BUSINESS")
-    query = keyword
+
+    query = keyword + "醫師介紹和評價"
     page = 1
     result = {}
     result["data"] = []
 
     con = conPool.get_connection()
     cursor = con.cursor(buffered=True)
-    cursor.execute(
-        "SELECT link, title, createdAt FROM businessLink WHERE doctor=%s AND createdAt>%s;", (keyword, expiredDay))
-    link = cursor.fetchone()
 
     cursor.execute(
-        "SELECT author, timestamp, comment, createdAt FROM businessComment WHERE doctor=%s AND createdAt>%s;", (keyword, expiredDay))
+        "SELECT author, timestamp, comment, createdAt, link, location FROM businessComment WHERE doctor=%s AND createdAt>%s;", (keyword, expiredDay))
     data = cursor.fetchall()
 
     cursor.close()
     con.close()
 
-    if link != None:
-        result["url"] = link[0]
-        result["title"] = link[1]
-        result["createdAt"] = link[2]
+    if len(data) != 0:
         for d in data:
             item = {}
             item["name"] = d[0]
             item["posttime"] = untilNow(float(d[1]))
             item["comment"] = d[2]
             item["createdAt"] = d[3]
+            item["link"] = d[4]
+            item["location"] = d[5]
             result["data"].append(item)
         return result
     else:
@@ -237,20 +250,9 @@ def readBusiness(keyword, T1, expiredDay):
         data = requests.get(url).json()
         try:
             for i in range(len(data["items"])):
-                if (query+"醫師介紹和評價") in data["items"][i]["title"]:
+                if (keyword+"醫師介紹和評價") in data["items"][i]["title"]:
+
                     link = data["items"][i]["link"]
-                    title = data["items"][i]["title"]
-                    result["url"] = link
-                    result["title"] = title
-
-                    con = conPool.get_connection()
-                    cursor = con.cursor()
-                    cursor.execute(
-                        "INSERT INTO businessLink (doctor, link, title) VALUES (%s, %s,%s)", (keyword, link, title))
-                    con.commit()
-                    cursor.close()
-                    con.close()
-
                     request = urllib.request.Request(link, headers={
                         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
                     })
@@ -259,6 +261,8 @@ def readBusiness(keyword, T1, expiredDay):
                         html = response.read().decode("utf-8")
                     soup = BeautifulSoup(html, "html.parser")
                     messages = soup.find_all("div", class_="commentbody")
+                    location = soup.find(
+                        "li", class_="clearfix").find("a").text
                     for message in messages:
                         posttime = message.find("div", class_="posttime").text
                         commentPart = message.find(
@@ -278,12 +282,14 @@ def readBusiness(keyword, T1, expiredDay):
                         item["name"] = author
                         item["posttime"] = untilNow(timestamp)
                         item["comment"] = comment
+                        item["link"] = link
+                        item["location"] = location
                         result["data"].append(item)
 
                         con = conPool.get_connection()
                         cursor = con.cursor()
                         cursor.execute(
-                            "INSERT INTO businessComment (doctor, author, timestamp, comment) VALUES (%s, %s,%s, %s)", (keyword, author, timestamp, comment))
+                            "INSERT INTO businessComment (doctor, author, timestamp, comment, link, location) VALUES (%s, %s,%s, %s,%s, %s)", (keyword, author, timestamp, comment, link, location))
                         con.commit()
                         cursor.close()
                         con.close()
@@ -296,184 +302,14 @@ def readBusiness(keyword, T1, expiredDay):
         return result, 200
 
 
-def crawlReview(inputtext):
-    def getReviews(keyword, result):
-        Title = driver.find_element(By.CSS_SELECTOR, "h1").text
-        # if "Hospital" in Title or "Clinic" in Title or "醫" in Title or "診所" in Title:
-        print("函數中")
-        Btn = driver.find_elements(By.CLASS_NAME, "Gpq6kf")[1]  # 點選評論
-        Btn.click()
-        time.sleep(1)
-        print(Btn.text)
-        print("點選評論")
-        print(Btn)
-        Search = driver.find_elements(By.CLASS_NAME, "g88MCb")[1]  # 點選搜尋
-        Search.click()
-        time.sleep(1)
-        print("點選搜尋")
-        print(Search)
-        Input = driver.find_element(By.CLASS_NAME, 'LCTIRd')
-        Input.send_keys(keyword)  # 輸入搜尋
-        Input.send_keys(Keys.ENTER)
-        time.sleep(3)
-        print("輸入搜尋")
-        # sort = driver.find_element(
-        #     By.XPATH, "//*[contains(text(), '排序')]")  # 選擇排序
-        # sort.click()
-        # time.sleep(1)
-
-        # new = driver.find_elements(By.CLASS_NAME, 'fxNQSd')[1]  # 選擇最新
-        # new.click()
-        count = 0
-        container = driver.find_element(By.CLASS_NAME, 'DxyBCb')
-        print("在小框框內")
-        print(container)
-        print("迴圈即將開始")
-        for i in range(2):
-            print(i)
-            driver.execute_script(
-                "arguments[0].scrollBy(0, arguments[0].scrollHeight);", container)
-            print("下滑視窗")
-            try:
-                mores = driver.find_elements(By.CLASS_NAME, 'w8nwRe')
-                for more in mores:
-                    more.click()
-                print("下滑視窗")
-            except:
-                pass
-            time.sleep(3)
-            reviews = driver.find_elements(By.CLASS_NAME, 'jJc9Ad')
-            for review in reviews:
-                name = review.find_element(By.CLASS_NAME, 'd4r55 ').text
-                print(name)
-        print("下滑資料")
-        reviews = driver.find_elements(By.CLASS_NAME, 'jJc9Ad')
-        for review in reviews:
-            count += 1
-            name = review.find_element(By.CLASS_NAME, 'd4r55 ').text
-
-            star = review.find_element(
-                By.CLASS_NAME, 'kvMYJc').get_attribute("aria-label")
-
-            when = review.find_element(By.CLASS_NAME, 'rsqaWe').text
-
-            try:
-                comment = review.find_element(By.CLASS_NAME, 'wiI7pd').text
-            except:
-                comment = ""
-            result["title"] = Title
-
-            item = {}
-            item["location"] = Title
-            item["name"] = name
-            item["star"] = star
-            item["when"] = when
-            item["comment"] = comment
-            result["data"].append(item)
-            print("裝入資料")
-        return result
-
-    options = Options()
-    ua = UserAgent()
-    user_agent = ua.random  # 偽裝隨機產生瀏覽器、作業系統
-    options.add_argument(f'--user-agent={user_agent}')
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('start-maximized')
-    options.add_argument("--disable-extensions")
-    options.add_argument('--disable-browser-side-navigation')
-    options.add_argument('enable-automation')
-    options.add_argument('--disable-infobars')
-    options.add_argument('enable-features=NetworkServiceInProcess')
-    options.add_experimental_option("detach", True)  # 加入後不會閃退
-    options.add_argument('--lang=zh-tw')
-    options.page_load_strategy = 'normal'
-    driver = webdriver.Chrome(options=options)
-    driver.maximize_window()
-    try:
-        keyword = inputtext.split()[0]
-        location = inputtext.split()[1]
-    except:
-        keyword = inputtext
-        location = ""
-
-    if location == "":
-        driver.get("https://www.google.com.tw/maps/search/"+keyword+"醫")
-        print(keyword)
-        print("https://www.google.com.tw/maps/search/"+keyword+"醫")
-    else:
-        driver.get("https://www.google.com.tw/maps/search/"+location+"醫院")
-        print(location)
-    # driver.get("https://www.google.com.tw/maps/search/"+inputtext+"醫")
-
-    time.sleep(1)
-    Linkst = []
-
-    i = 0
-    sponsors = driver.find_elements(By.CLASS_NAME, 'jHLihd')
-    for sponsor in sponsors:
-        i += 1
-        print(sponsor.text)
-    Links = driver.find_elements(By.CLASS_NAME, 'hfpxzc')
-    print(str(len(Links))+"個連結")
-
-    try:
-        linkLength = len(Links) - i
-        if linkLength > 3:
-            linkLength = 3
-        for j in range(i, linkLength):
-            Link = Links[j].get_attribute("href")
-            print("連結")
-            print(Link)
-            if "&entry=ttu" not in Link:
-                Link = Link + "&entry=ttu"
-                print("更新後的連結")
-                print(Link)
-            Linkst.append(Link)
-    except:
-        pass
-
-    result = {}
-    result["data"] = []
-    try:
-        if len(Linkst) == 0:
-            print("沒有其他連結")
-            Title = driver.find_element(By.CSS_SELECTOR, "h1").text
-            print(Title)
-            getReviews(keyword, result)
-        else:
-            for link in Linkst:
-                if len(result["data"]) == 0:
-                    driver.get(link)
-                    print("外開視窗")
-                    while True:
-                        try:
-                            driver.find_elements(By.CLASS_NAME, "Gpq6kf")[
-                                1]  # 點選評論
-                            getReviews(keyword, result)
-                            break
-                        except:
-                            driver.get(link)
-                else:
-                    print("已經有資料了")
-                    break
-    except:
-        print("exception")
-
-    driver.close()
-    driver.quit()
-    return result
-
-
-def readJudgment(keyword, T1, expiredDay):
+def readJudgment(inputtext, T1, expiredDay):
     result = {}
     result["data"] = []
 
     con = conPool.get_connection()
     cursor = con.cursor()
     cursor.execute(
-        "SELECT link, title FROM judgment WHERE doctor=%s AND createdAt>%s;", (keyword, expiredDay))
+        "SELECT link, title FROM judgment WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
     data = cursor.fetchall()
     cursor.close()
     con.close()
@@ -508,22 +344,32 @@ def readJudgment(keyword, T1, expiredDay):
         driver.maximize_window()
 
         try:
+            inputList = inputtext.split()
+            keyword = inputtext.split()[0]
+        except:
+            keyword = inputtext
+
+        query = '(被告'+keyword+'+被上訴人'+keyword+'+相對人' + \
+            keyword+'+被告醫院之履行輔助人'+keyword+')&(醫生+醫師)'
+
+        for i in range(1, len(inputList)):
+            query += '&'+inputList[i]
+
+        try:
             driver.get("https://judgment.judicial.gov.tw/FJUD/default.aspx")
             Input = driver.find_element(By.ID, 'txtKW')
-            Input.send_keys('(被告'+keyword+'+被上訴人'+keyword+'+相對人' +
-                            keyword+'+被告醫院之履行輔助人'+keyword+')&(醫生+醫師)')
+            Input.send_keys(query)
             Btn = driver.find_element(By.ID, 'btnSimpleQry')
             Btn.send_keys(Keys.ENTER)
             driver.switch_to.frame('iframe-data')
 
             time.sleep(1)
             links = driver.find_elements(By.CLASS_NAME, 'hlTitle_scroll')
-            # tags = driver.find_elements(By.CLASS_NAME, 'tdCut')
             if len(links) == 0:
                 con = conPool.get_connection()
                 cursor = con.cursor()
                 cursor.execute(
-                    "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (keyword, "", "搜尋不到資料：關鍵字可嘗試僅輸入醫生名稱，例如：王大明"))
+                    "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (inputtext, "", "搜尋不到資料：關鍵字可嘗試僅輸入醫生名稱，例如：王大明"))
                 con.commit()
                 cursor.close()
                 con.close()
@@ -540,7 +386,7 @@ def readJudgment(keyword, T1, expiredDay):
                     con = conPool.get_connection()
                     cursor = con.cursor()
                     cursor.execute(
-                        "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (keyword, link, title))
+                        "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (inputtext, link, title))
                     con.commit()
                     cursor.close()
                     con.close()
@@ -579,17 +425,26 @@ def viewThank(data):
     return result
 
 
-def readPtt(keyword, T1, expiredDay):
+def readPtt(inputtext, T1, expiredDay):
     result = {}
     result["data"] = []
 
     con = conPool.get_connection()
     cursor = con.cursor()
     cursor.execute(
-        "SELECT link, title, text FROM Ptt WHERE doctor=%s AND createdAt>%s;", (keyword, expiredDay))
+        "SELECT link, title, text FROM Ptt WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
     data = cursor.fetchall()
+    cursor.execute(
+        "SELECT board FROM PttBoard;")
+    data_board = cursor.fetchall()
     cursor.close()
     con.close()
+
+    boards = ["Nurse", "BabyMother", "GoodPregnan", "Laser_eye",
+              "hair_loss", "facelift", "teeth_salon", "KIDs", "Preschooler"]
+
+    for d in data_board:
+        boards.append(d[0])
 
     if len(data) != 0:
         for d in data:
@@ -600,9 +455,18 @@ def readPtt(keyword, T1, expiredDay):
             result["data"].append(item)
         return result
     else:
+        try:
+            inputList = inputtext.split()
+            keyword = inputtext.split()[0]
+        except:
+            keyword = inputtext
+        query = '"'+keyword+'"'+'+醫生'+'+醫師'
+
+        for i in range(1, len(inputList)):
+            query += '+'+inputList[i]
+
         API_KEY = get_key(".env", "API_KEY")
         SEARCH_ENGINE_ID_PTT = get_key(".env", "SEARCH_ENGINE_ID_PTT")
-        query = keyword + '+"醫生"'
         page = 1
         while page < 6:
             start = (page - 1) * 10 + 1
@@ -611,11 +475,9 @@ def readPtt(keyword, T1, expiredDay):
             data = requests.get(url).json()
             try:
                 for i in range(len(data["items"])):
-                    boards = ["Doctor-Info", "allergy", "Anti-Cancer", "Nurse",
-                              "BabyMother", "BigPeitou", "BigShiLin", "GoodPregnan", "Laser_eye"]
                     for board in boards:
                         if board in data["items"][i]["link"]:
-                            if ("徵才" not in data["items"][i]["title"] and "新聞" not in data["items"][i]["title"] and keyword in data["items"][i]["snippet"]):
+                            if ("徵才" not in data["items"][i]["title"] and "新聞" not in data["items"][i]["title"] and (keyword in data["items"][i]["title"] or keyword in data["items"][i]["snippet"])):
 
                                 link = data["items"][i]["link"]
                                 title = data["items"][i]["title"]
@@ -630,7 +492,7 @@ def readPtt(keyword, T1, expiredDay):
                                 con = conPool.get_connection()
                                 cursor = con.cursor()
                                 cursor.execute(
-                                    "INSERT INTO Ptt (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (keyword, link, title, text))
+                                    "INSERT INTO Ptt (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (inputtext, link, title, text))
                                 con.commit()
                                 cursor.close()
                                 con.close()
@@ -644,14 +506,14 @@ def readPtt(keyword, T1, expiredDay):
         return result, 200
 
 
-def readSearch(keyword, T1, expiredDay):
+def readSearch(inputtext, T1, expiredDay):
     result = {}
     result["data"] = []
 
     con = conPool.get_connection()
     cursor = con.cursor()
     cursor.execute(
-        "SELECT link, title, text FROM search WHERE doctor=%s AND createdAt>%s;", (keyword, expiredDay))
+        "SELECT link, title, text FROM search WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
     data = cursor.fetchall()
     cursor.close()
     con.close()
@@ -665,9 +527,18 @@ def readSearch(keyword, T1, expiredDay):
             result["data"].append(item)
         return result
     else:
+        try:
+            inputList = inputtext.split()
+            keyword = inputtext.split()[0]
+        except:
+            keyword = inputtext
+        query = '"'+keyword+'"'+'+醫生'+'+醫師'+'+"感謝函"'
+
+        for i in range(1, len(inputList)):
+            query += '+'+inputList[i]
+
         API_KEY = get_key(".env", "API_KEY")
         SEARCH_ENGINE_ID_ALL = get_key(".env", "SEARCH_ENGINE_ID_ALL")
-        query = '"'+keyword+'"'+'+"醫"'+'+"感謝函"'
         page = 1
 
         start = (page - 1) * 10 + 1
@@ -691,26 +562,26 @@ def readSearch(keyword, T1, expiredDay):
                     con = conPool.get_connection()
                     cursor = con.cursor()
                     cursor.execute(
-                        "INSERT INTO search (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (keyword, link, title, text))
+                        "INSERT INTO search (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (inputtext, link, title, text))
                     con.commit()
                     cursor.close()
                     con.close()
         except:
-            print("Search沒資料")
+            pass
 
         T2 = time.perf_counter()
         print("Search好了："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 
-def readBlog(keyword, T1, expiredDay):
+def readBlog(inputtext, T1, expiredDay):
     result = {}
     result["data"] = []
 
     con = conPool.get_connection()
     cursor = con.cursor()
     cursor.execute(
-        "SELECT link, title, text FROM blog WHERE doctor=%s AND createdAt>%s;", (keyword, expiredDay))
+        "SELECT link, title, text FROM blog WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
     data = cursor.fetchall()
     cursor.close()
     con.close()
@@ -724,9 +595,18 @@ def readBlog(keyword, T1, expiredDay):
             result["data"].append(item)
         return result
     else:
+        try:
+            inputList = inputtext.split()
+            keyword = inputtext.split()[0]
+        except:
+            keyword = inputtext
+        query = '"'+keyword+'"'+'+醫生'+'+醫師'
+
+        for i in range(1, len(inputList)):
+            query += '+'+inputList[i]
+
         API_KEY = get_key(".env", "API_KEY")
         SEARCH_ENGINE_ID_BLOG = get_key(".env", "SEARCH_ENGINE_ID_BLOG")
-        query = '"'+keyword+'"'+'+醫生'+'+醫師'
         page = 1
 
         start = (page - 1) * 10 + 1
@@ -751,13 +631,13 @@ def readBlog(keyword, T1, expiredDay):
                         con = conPool.get_connection()
                         cursor = con.cursor()
                         cursor.execute(
-                            "INSERT INTO blog (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (keyword, link, title, text))
+                            "INSERT INTO blog (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (inputtext, link, title, text))
                         con.commit()
                         cursor.close()
                         con.close()
 
         except:
-            print("Blog沒資料")
+            pass
         T2 = time.perf_counter()
         print("Blog好了："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
@@ -817,17 +697,17 @@ def getPtt(keyword):
     return result
 
 
-@app.route("/api/search/<keyword>")
-def getSearch(keyword):
+@app.route("/api/search/<inputtext>")
+def getSearch(inputtext):
     T1 = time.perf_counter()
-    result = readSearch(keyword, T1, expiredDay)
+    result = readSearch(inputtext, T1, expiredDay)
     return result
 
 
-@app.route("/api/blog/<keyword>")
-def getBlog(keyword):
+@app.route("/api/blog/<inputtext>")
+def getBlog(inputtext):
     T1 = time.perf_counter()
-    result = readBlog(keyword, T1, expiredDay)
+    result = readBlog(inputtext, T1, expiredDay)
     return result
 
 
@@ -890,15 +770,6 @@ def getAll(keyword):
     result["ok"] = True
     T2 = time.perf_counter()
     print("全都好了")
-    print('%s毫秒' % ((T2 - T1)*1000))
-    return result
-
-
-@app.route("/api/crawlreview/<inputtext>")
-def crawl(inputtext):
-    T1 = time.perf_counter()
-    result = crawlReview(inputtext)
-    T2 = time.perf_counter()
     print('%s毫秒' % ((T2 - T1)*1000))
     return result
 
