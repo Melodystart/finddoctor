@@ -574,6 +574,76 @@ def readSearch(inputtext, T1, expiredDay):
         return result, 200
 
 
+def readDcard(inputtext, T1, expiredDay):
+    result = {}
+    result["data"] = []
+
+    con = conPool.get_connection()
+    cursor = con.cursor()
+    cursor.execute(
+        "SELECT link, title, text FROM Dcard WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
+    data = cursor.fetchall()
+    cursor.close()
+    con.close()
+
+    if len(data) != 0:
+        for d in data:
+            item = {}
+            item["url"] = d[0]
+            item["title"] = d[1]
+            item["text"] = d[2]
+            result["data"].append(item)
+        return result
+    else:
+        try:
+            inputList = inputtext.split()
+            keyword = inputtext.split()[0]
+        except:
+            keyword = inputtext
+        query = '"'+keyword+'"'+'+醫生'+'+醫師'
+
+        for i in range(1, len(inputList)):
+            query += '+'+inputList[i]
+
+        API_KEY = get_key(".env", "API_KEY")
+        SEARCH_ENGINE_ID_Dcard = get_key(".env", "SEARCH_ENGINE_ID_Dcard")
+        page = 1
+        while page < 6:
+            start = (page - 1) * 10 + 1
+            url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_Dcard}&q={query}&start={start}"
+
+            data = requests.get(url).json()
+            try:
+                for i in range(len(data["items"])):
+                    if ("徵才" not in data["items"][i]["title"] and "新聞" not in data["items"][i]["title"] and (keyword in data["items"][i]["title"] or keyword in data["items"][i]["snippet"])):
+
+                        link = data["items"][i]["link"]
+                        title = data["items"][i]["title"]
+                        text = data["items"][i]["snippet"]
+
+                        item = {}
+                        item["url"] = link
+                        item["title"] = title
+                        item["text"] = text
+                        result["data"].append(item)
+
+                        con = conPool.get_connection()
+                        cursor = con.cursor()
+                        cursor.execute(
+                            "INSERT INTO Dcard (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (inputtext, link, title, text))
+                        con.commit()
+                        cursor.close()
+                        con.close()
+
+                page += 1
+            except:
+                break
+
+        T2 = time.perf_counter()
+        print("Dcard好了："+'%s毫秒' % ((T2 - T1)*1000))
+        return result, 200
+
+
 def readBlog(inputtext, T1, expiredDay):
     result = {}
     result["data"] = []
@@ -663,6 +733,11 @@ def search():
     return render_template("search.html")
 
 
+@app.route("/Dcard")
+def Dcard():
+    return render_template("Dcard.html")
+
+
 @app.route("/blog")
 def blog():
     return render_template("blog.html")
@@ -690,10 +765,17 @@ def getthank(keyword):
     return result
 
 
-@app.route("/api/Ptt/<keyword>")
-def getPtt(keyword):
+@app.route("/api/Ptt/<inputtext>")
+def getPtt(inputtext):
     T1 = time.perf_counter()
-    result = readPtt(keyword, T1, expiredDay)
+    result = readPtt(inputtext, T1, expiredDay)
+    return result
+
+
+@app.route("/api/Dcard/<inputtext>")
+def getDcard(inputtext):
+    T1 = time.perf_counter()
+    result = readDcard(inputtext, T1, expiredDay)
     return result
 
 
@@ -711,10 +793,10 @@ def getBlog(inputtext):
     return result
 
 
-@app.route("/api/judgment/<keyword>")
-def getJudgment(keyword):
+@app.route("/api/judgment/<inputtext>")
+def getJudgment(inputtext):
     T1 = time.perf_counter()
-    result = readJudgment(keyword, T1, expiredDay)
+    result = readJudgment(inputtext, T1, expiredDay)
     return result
 
 
@@ -760,10 +842,13 @@ def getAll(keyword):
                    args=(keyword, T1, expiredDay)))
     threads.append(threading.Thread(target=readBlog,
                    args=(keyword, T1, expiredDay)))
-    for i in range(6):
+    threads.append(threading.Thread(target=readDcard,
+                   args=(keyword, T1, expiredDay)))
+
+    for i in range(7):
         threads[i].start()
 
-    for i in range(6):
+    for i in range(7):
         threads[i].join()
 
     result = {}

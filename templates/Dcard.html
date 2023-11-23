@@ -24,13 +24,13 @@
       <a class="category-text thank" href="" style="color:white;">臺北榮總感謝函</a>
     </div>
     <div class="category">
-      <a class="category-text search active" href="" style="color:rgb(137, 207, 240);">感謝</a>
+      <a class="category-text search" href="" style="color:white;">感謝</a>
     </div>
     <div class="category">
       <a class="category-text Ptt" href="" style="color:white;">Ptt</a>
     </div>
-    <div class="category">
-      <a class="category-text Dcard" href="" style="color:white;">Dcard</a>
+    <div class="category active">
+      <a class="category-text Dcard" href="" style="color:rgb(137, 207, 240);">Dcard</a>
     </div>
     <div class="category">
       <a class="category-text blog" href="" style="color:white;">部落格</a>
@@ -59,14 +59,14 @@
 
 <script>
 
-  function getSearch() {
+  function getDcard() {
     const inputtext = decodeURIComponent(window.location.search).replace("?search=", "").trim();
     const inputList = inputtext.split(/\s+/)
     const keyword = inputList[0]
     const search = document.querySelector(".doctor");
     search.value = inputtext;
     const contentContainer = document.querySelector(".content-container")
-    url = "/api/search/" + inputtext;
+    url = "/api/Dcard/" + inputtext;
 
     fetch(url, { method: "GET" })
       .then(response => response.json())
@@ -99,18 +99,18 @@
       .catch(error => console.error("Error:", error))
   }
 
-  getSearch();
+  getDcard();
 
   const submit = document.querySelector(".fas")
   submit.addEventListener("click", function (event) {
     const search = document.querySelector(".doctor").value
-    return window.location.href = "/search?search=" + search
+    return window.location.href = "/Dcard?search=" + search
   })
   const input = document.querySelector(".doctor")
   input.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
       const search = document.querySelector(".doctor").value
-      return window.location.href = "/search?search=" + search
+      return window.location.href = "/Dcard?search=" + search
     }
   })
   document.querySelector(".thank").href = "/thank?search=" + document.querySelector(".doctor").value

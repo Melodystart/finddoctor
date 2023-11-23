@@ -22,6 +22,7 @@ cursor.execute("DROP table IF EXISTS review;")
 cursor.execute("DROP table IF EXISTS businessComment;")
 cursor.execute("DROP table IF EXISTS judgment;")
 cursor.execute("DROP table IF EXISTS Ptt;")
+cursor.execute("DROP table IF EXISTS Dcard;")
 cursor.execute("DROP table IF EXISTS search;")
 cursor.execute("DROP table IF EXISTS blog;")
 cursor.execute("DROP table IF EXISTS record;")
@@ -46,7 +47,8 @@ cursor.execute(
     "CREATE table blog (id BIGINT PRIMARY KEY auto_increment,doctor VARCHAR(255),link TEXT,title TEXT, text TEXT, createdAt DATE DEFAULT (CURRENT_DATE));")
 cursor.execute(
     "CREATE table PttBoard (id BIGINT PRIMARY KEY auto_increment,board VARCHAR(255));")
-
+cursor.execute(
+    "CREATE table Dcard (id BIGINT PRIMARY KEY auto_increment,doctor VARCHAR(255),link TEXT,title TEXT, text TEXT, createdAt DATE DEFAULT (CURRENT_DATE));")
 
 def getsoup(link):
     request = urllib.request.Request(link, headers={
