@@ -72,7 +72,8 @@
           <div class="content" style="color:#f76b8a;">搜尋不到資料</div>
           <div class="from">搜尋關鍵字可嘗試僅輸入醫生名稱 (例：王大明)</div>`
         } else {
-          contentContainer.innerHTML = "";
+          contentContainer.innerHTML = `<div class="content" style="color:#f76b8a;">搜尋結果包含：醫師 ${keyword}</div>
+            <div class="from">關鍵字可為 <span style="box-shadow: 0 1px;">醫師名稱  醫院全名</span> 以縮小範圍，例如：王大明  臺北榮民總醫院</span>`;
           const data = result["data"]
 
           data.forEach(d => {

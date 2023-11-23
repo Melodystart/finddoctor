@@ -123,13 +123,6 @@ def readReview(inputtext, T1, expiredDay):
         except:
             pass
 
-    try:
-        keyword = inputtext.split()[0]
-        # location = inputtext.split()[1]
-    except:
-        keyword = inputtext
-        # location = ""
-
     result = {}
     result["data"] = []
 
@@ -156,7 +149,17 @@ def readReview(inputtext, T1, expiredDay):
             result["data"].append(item)
         return result
     else:
-        query = inputtext + "醫"
+        try:
+            inputList = inputtext.split()
+            keyword = inputtext.split()[0]
+        except:
+            keyword = inputtext
+
+        query = keyword + "醫"
+
+        for i in range(1, len(inputList)):
+            query += '+'+inputList[i]
+
         API_KEY = get_key(".env", "API_KEY")
 
         url = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=" + \
@@ -175,8 +178,8 @@ def readReview(inputtext, T1, expiredDay):
             # print(places_sort)
             places = list(places_dict.keys())
             counts = len(places)
-            if counts > 3:  # 僅取前3個搜尋地點
-                counts = 3
+            if counts > 5:  # 僅取前5個搜尋地點
+                counts = 5
 
             # 使用threading
             threads = []

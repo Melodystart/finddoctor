@@ -66,8 +66,9 @@
       return star
     }
 
-    const inputtext = decodeURIComponent(window.location.search).replace("?search=", "");
-    const keyword = inputtext.split()[0];
+    const inputtext = decodeURIComponent(window.location.search).replace("?search=", "").trim();
+    const inputList = inputtext.split(/\s+/);
+    const keyword = inputList[0];
     const search = document.querySelector(".doctor");
     search.value = inputtext;
     const contentContainer = document.querySelector(".content-container");
@@ -89,13 +90,17 @@
             if (d["review"] === "") {
               contentContainer.innerHTML = `
           <div class="content" style="color:#f76b8a;">搜尋不到資料</div>
-          <div class="from">搜尋關鍵字可嘗試增加醫院名稱，例如：王大明 榮總</div>`
+          <div class="from">搜尋關鍵字可嘗試增加醫院名稱，例如：王大明 臺北榮民總醫院</div>`
             } else {
               const content = document.createElement("div");
               content.classList.add("content");
 
-              title = d["name"].replace(keyword, `<span class="highlight">${keyword}</span>`)
-              text = d["review"].replace(keyword, `<span class="highlight">${keyword}</span>`)
+              title = d["name"]
+              text = d["review"]
+              inputList.forEach(input => {
+                title = title.replace(input, `<span class="highlight">${input}</span>`)
+                text = text.replace(input, `<span class="highlight">${input}</span>`)
+              })
 
               star = starImg(d["star"])
               content.innerHTML = `
