@@ -123,6 +123,11 @@ def readReview(inputtext, T1, expiredDay):
         except:
             pass
 
+    try:
+        keyword = inputtext.split()[0]
+    except:
+        keyword = inputtext
+
     result = {}
     result["data"] = []
 
@@ -149,16 +154,7 @@ def readReview(inputtext, T1, expiredDay):
             result["data"].append(item)
         return result
     else:
-        try:
-            inputList = inputtext.split()
-            keyword = inputtext.split()[0]
-        except:
-            keyword = inputtext
-
-        query = keyword + "醫"
-
-        for i in range(1, len(inputList)):
-            query += '+'+inputList[i]
+        query = inputtext + "醫"
 
         API_KEY = get_key(".env", "API_KEY")
 
