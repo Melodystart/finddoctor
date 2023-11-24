@@ -15,6 +15,8 @@ from outscraper import ApiClient
 from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 from apscheduler.schedulers.background import BackgroundScheduler
+from elasticsearch import Elasticsearch
+es = Elasticsearch("http://localhost:9200/")
 
 conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
     ".env", "password"), host='localhost', database='finddoctor', pool_name='findConPool', pool_size=10,  auth_plugin='mysql_native_password')
@@ -401,13 +403,19 @@ def readJudgment(inputtext, T1, expiredDay):
 
 
 def readThank(keyword):
-    con = conPool.get_connection()
-    cursor = con.cursor()
-    cursor.execute(
-        "SELECT thankUrl.url, thank.target, thank.content, thank.month FROM thank LEFT JOIN thankUrl ON thank.month = thankUrl.month WHERE content LIKE %s;", ("%" + keyword + "%",))
-    data = cursor.fetchall()
-    cursor.close()
-    con.close()
+    # con = conPool.get_connection()
+    # cursor = con.cursor()
+    # cursor.execute(
+    #     "SELECT thankUrl.url, thank.target, thank.content, thank.month FROM thank LEFT JOIN thankUrl ON thank.month = thankUrl.month WHERE content LIKE %s;", ("%" + keyword + "%",))
+    # data = cursor.fetchall()
+    # cursor.close()
+    # con.close()
+    res = es.search(index='thank', body={"size": 100, "query": {
+        "match_phrase": {
+            "content": keyword
+        }
+    }})
+    data = res['hits']['hits']
     return data
 
 
@@ -415,11 +423,17 @@ def viewThank(data):
     result = {}
     result["data"] = []
     for d in data:
+        res = es.search(index='thankurl', query={
+            "match": {
+                "month": d['_source']['month']
+            }
+        })
+
         item = {}
-        item["url"] = d[0]
-        item["title"] = d[1]
-        item["text"] = d[2]
-        item["when"] = d[3]
+        item["url"] = res['hits']['hits'][0]['_source']['url']
+        item["title"] = d['_source']['target']
+        item["text"] = d['_source']['content']
+        item["when"] = d['_source']['month']
         result["data"].append(item)
     return result
 
