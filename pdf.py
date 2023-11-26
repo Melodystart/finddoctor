@@ -16,11 +16,11 @@ def thankPDF(title, url):
             urllib.parse.quote(needTranscode)
 
     with urllib.request.urlopen(url) as response:
-        f = open("/home/ubuntu/finddoctor/test.pdf", "wb")
+        f = open("test.pdf", "wb")
         f.write(response.read())
         f.close()
 
-    pdf = pdfplumber.open('/home/ubuntu/finddoctor/test.pdf')
+    pdf = pdfplumber.open('test.pdf')
     pages = pdf.pages
     result = []
 
