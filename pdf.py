@@ -83,7 +83,7 @@ def thankPDF(title, url):
         })
 
     pdf.close()
-    os.remove("test.pdf")
+    # os.remove("test.pdf")
 
 
 thankPDF("105年11月感謝函", "https://www.vghtpe.gov.tw/vghtpe/files/PDF/thank/105%E5%B9%B411%E6%9C%88%E6%84%9F%E8%AC%9D%E5%87%BD.pdf")
