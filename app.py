@@ -326,7 +326,7 @@ def readJudgment(inputtext, T1, expiredDay):
             result["data"].append(item)
         return result
     else:
-        if selenium_counts < 2:
+        if selenium_counts < 12:
             selenium_counts += 1
             print("第"+str(selenium_counts)+"個爬蟲開始爬")
             options = Options()
