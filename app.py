@@ -326,7 +326,9 @@ def readJudgment(inputtext, T1, expiredDay):
             result["data"].append(item)
         return result
     else:
-        if selenium_counts < 4:
+        if selenium_counts < 2:
+            selenium_counts += 1
+            print("第"+str(selenium_counts)+"個爬蟲開始爬")
             options = Options()
             ua = UserAgent()
             user_agent = ua.random  # 偽裝隨機產生瀏覽器、作業系統
@@ -347,8 +349,6 @@ def readJudgment(inputtext, T1, expiredDay):
             options.page_load_strategy = 'normal'
             driver = webdriver.Chrome(options=options)
             driver.maximize_window()
-            selenium_counts += 1
-            print("第"+str(selenium_counts)+"個爬蟲開始爬")
             try:
                 inputList = inputtext.split()
                 keyword = inputtext.split()[0]
@@ -402,8 +402,8 @@ def readJudgment(inputtext, T1, expiredDay):
             except:
                 print("司法院資料異常")
                 # driver.quit()
-            selenium_counts -= 1
             driver.close()
+            selenium_counts -= 1
             print("有爬蟲結束，剩下"+str(selenium_counts)+"個爬蟲")
             T2 = time.perf_counter()
             print("司法院好了："+'%s毫秒' % ((T2 - T1)*1000))
