@@ -69,7 +69,7 @@
 
         if (result["busy"]) {
           contentContainer.innerHTML = `
-          <div class="content" style="color:#f76b8a;">目前多人查詢中，請稍後再試</div>`
+          <div class="content" style="color:yellow;">資料讀取中，請稍後</div>`
         } else {
           if (result["data"].length === 0) {
             contentContainer.innerHTML = `
@@ -103,7 +103,7 @@
 
   setTimeout(() => {
     document.location.reload();
-  }, 3000);
+  }, 10000);
 
   const submit = document.querySelector(".fas")
   submit.addEventListener("click", function (event) {
