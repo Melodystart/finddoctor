@@ -323,85 +323,91 @@ def readJudgment(inputtext, T1, expiredDay):
             result["data"].append(item)
         return result
     else:
-        options = Options()
-        ua = UserAgent()
-        user_agent = ua.random  # 偽裝隨機產生瀏覽器、作業系統
-        options.add_argument(f'--user-agent={user_agent}')
-        options.add_argument('headless')
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('start-maximized')
-        options.add_argument("--disable-extensions")
-        options.add_argument('--disable-browser-side-navigation')
-        options.add_argument('enable-automation')
-        options.add_argument('--disable-infobars')
-        options.add_argument('enable-features=NetworkServiceInProcess')
-        options.add_argument('--disable-dev-shm-usage')
+        if selenium_counts < 6:
+            options = Options()
+            ua = UserAgent()
+            user_agent = ua.random  # 偽裝隨機產生瀏覽器、作業系統
+            options.add_argument(f'--user-agent={user_agent}')
+            options.add_argument('headless')
+            options.add_argument('--headless')
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-dev-shm-usage')
+            options.add_argument('start-maximized')
+            options.add_argument("--disable-extensions")
+            options.add_argument('--disable-browser-side-navigation')
+            options.add_argument('enable-automation')
+            options.add_argument('--disable-infobars')
+            options.add_argument('enable-features=NetworkServiceInProcess')
+            options.add_argument('--disable-dev-shm-usage')
 
-        options.add_experimental_option("detach", True)  # 加入後不會閃退
-        options.page_load_strategy = 'normal'
-        driver = webdriver.Chrome(options=options)
-        driver.maximize_window()
+            options.add_experimental_option("detach", True)  # 加入後不會閃退
+            options.page_load_strategy = 'normal'
+            driver = webdriver.Chrome(options=options)
+            driver.maximize_window()
+            selenium_counts += 1
+            print("第"+selenium_counts+"個爬蟲開始爬")
+            try:
+                inputList = inputtext.split()
+                keyword = inputtext.split()[0]
+            except:
+                keyword = inputtext
 
-        try:
-            inputList = inputtext.split()
-            keyword = inputtext.split()[0]
-        except:
-            keyword = inputtext
+            query = '(被告'+keyword+'+被上訴人'+keyword+'+相對人' + \
+                keyword+'+被告醫院之履行輔助人'+keyword+')&(醫生+醫師)'
 
-        query = '(被告'+keyword+'+被上訴人'+keyword+'+相對人' + \
-            keyword+'+被告醫院之履行輔助人'+keyword+')&(醫生+醫師)'
+            for i in range(1, len(inputList)):
+                query += '&'+inputList[i]
 
-        for i in range(1, len(inputList)):
-            query += '&'+inputList[i]
+            try:
+                driver.get(
+                    "https://judgment.judicial.gov.tw/FJUD/default.aspx")
+                Input = driver.find_element(By.ID, 'txtKW')
+                Input.send_keys(query)
+                Btn = driver.find_element(By.ID, 'btnSimpleQry')
+                Btn.send_keys(Keys.ENTER)
+                driver.switch_to.frame('iframe-data')
 
-        try:
-            driver.get("https://judgment.judicial.gov.tw/FJUD/default.aspx")
-            Input = driver.find_element(By.ID, 'txtKW')
-            Input.send_keys(query)
-            Btn = driver.find_element(By.ID, 'btnSimpleQry')
-            Btn.send_keys(Keys.ENTER)
-            driver.switch_to.frame('iframe-data')
-
-            time.sleep(1)
-            links = driver.find_elements(By.CLASS_NAME, 'hlTitle_scroll')
-            if len(links) == 0:
-                con = conPool.get_connection()
-                cursor = con.cursor()
-                cursor.execute(
-                    "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (inputtext, "", "搜尋不到資料：關鍵字可嘗試僅輸入醫生名稱，例如：王大明"))
-                con.commit()
-                cursor.close()
-                con.close()
-            else:
-                for l in links:
-                    link = l.get_attribute("href")
-                    title = l.text
-
-                    item = {}
-                    item["url"] = link
-                    item["title"] = title
-                    result["data"].append(item)
-
+                time.sleep(1)
+                links = driver.find_elements(By.CLASS_NAME, 'hlTitle_scroll')
+                if len(links) == 0:
                     con = conPool.get_connection()
                     cursor = con.cursor()
                     cursor.execute(
-                        "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (inputtext, link, title))
+                        "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (inputtext, "", "搜尋不到資料：關鍵字可嘗試僅輸入醫生名稱，例如：王大明"))
                     con.commit()
                     cursor.close()
                     con.close()
+                else:
+                    for l in links:
+                        link = l.get_attribute("href")
+                        title = l.text
 
-            driver.close()
-            # driver.quit()
-        except:
-            print("司法院資料異常")
-            driver.close()
-            # driver.quit()
+                        item = {}
+                        item["url"] = link
+                        item["title"] = title
+                        result["data"].append(item)
 
-        T2 = time.perf_counter()
-        print("司法院好了："+'%s毫秒' % ((T2 - T1)*1000))
-        return result, 200
+                        con = conPool.get_connection()
+                        cursor = con.cursor()
+                        cursor.execute(
+                            "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (inputtext, link, title))
+                        con.commit()
+                        cursor.close()
+                        con.close()
+
+                # driver.quit()
+            except:
+                print("司法院資料異常")
+                # driver.quit()
+            selenium_counts -= 1
+            driver.close()
+            print("有爬蟲結束，剩下"+selenium_counts+"個爬蟲")
+            T2 = time.perf_counter()
+            print("司法院好了："+'%s毫秒' % ((T2 - T1)*1000))
+            return result, 200
+        else:
+            print("有5個正在爬蟲")
+            return result, 200
 
 
 def readThank(keyword):
@@ -926,4 +932,5 @@ scheduler.add_job(updatedata, 'cron',
 # 3. 排程開始
 scheduler.start()
 
+selenium_counts = 0
 app.run(host="0.0.0.0", port=8080)
