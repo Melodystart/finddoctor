@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from fake_useragent import UserAgent
 import time
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from flask import *
@@ -341,7 +342,8 @@ def readJudgment(inputtext, T1, expiredDay):
 
         options.add_experimental_option("detach", True)  # 加入後不會閃退
         options.page_load_strategy = 'normal'
-        driver = webdriver.Chrome(options=options)
+        service = Service(executable_path='./chromedriver.exe')
+        driver = webdriver.Chrome(service=service, options=options)
         driver.maximize_window()
 
         try:
