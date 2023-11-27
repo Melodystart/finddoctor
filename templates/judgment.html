@@ -67,28 +67,33 @@
       .then(response => response.json())
       .then(result => {
 
-        if (result["data"].length === 0) {
+        if (result["busy"]) {
           contentContainer.innerHTML = `
+          <div class="content" style="color:#f76b8a;">目前多人查詢中，請稍後再試</div>`
+        } else {
+          if (result["data"].length === 0) {
+            contentContainer.innerHTML = `
           <div class="content" style="color:#f76b8a;">搜尋不到資料</div>
           <div class="from">搜尋關鍵字可嘗試僅輸入醫生名稱，例如：王大明</div>`
-        } else {
-          const data = result["data"]
-          contentContainer.innerHTML = `<div class="content" style="color:#f76b8a;">搜尋結果包含：醫師 & ${keyword}</div>
+          } else {
+            const data = result["data"]
+            contentContainer.innerHTML = `<div class="content" style="color:#f76b8a;">搜尋結果包含：醫師 & ${keyword}</div>
             <div class="from">關鍵字可嘗試輸入 <span style="box-shadow: 0 1px;">醫師名稱  &nbsp;&nbsp;醫院全名</span> 以縮小範圍，例如：<span style="box-shadow: 0 1px;">王大明  &nbsp;&nbsp;臺北榮民總醫院</span></span>`;
-          data.forEach(d => {
-            if (d["url"] === "") {
-              contentContainer.innerHTML = `
+            data.forEach(d => {
+              if (d["url"] === "") {
+                contentContainer.innerHTML = `
           <div class="content" style="color:#f76b8a;">搜尋不到資料</div>
           <div class="from">搜尋關鍵字可嘗試僅輸入醫師名稱，例如：王大明</div>`
-            } else {
-              const content = document.createElement("div");
-              content.classList.add("content");
-              content.innerHTML = `
+              } else {
+                const content = document.createElement("div");
+                content.classList.add("content");
+                content.innerHTML = `
               <div class="content-title"><a class="content-link" href="${d["url"]}" target="_blank">${d["title"]}</a>
               </div>`
-              contentContainer.appendChild(content);
-            }
-          })
+                contentContainer.appendChild(content);
+              }
+            })
+          }
         }
       })
       .catch(error => console.error("Error:", error))
