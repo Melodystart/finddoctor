@@ -342,7 +342,7 @@ def readJudgment(inputtext, T1, expiredDay):
 
         options.add_experimental_option("detach", True)  # 加入後不會閃退
         options.page_load_strategy = 'normal'
-        service = Service(executable_path='./chromedriver.exe')
+        service = Service(executable_path='chromedriver.exe')
         driver = webdriver.Chrome(service=service, options=options)
         driver.maximize_window()
 
