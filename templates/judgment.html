@@ -101,6 +101,10 @@
 
   getJudgment();
 
+  setTimeout(() => {
+    document.location.reload();
+  }, 3000);
+
   const submit = document.querySelector(".fas")
   submit.addEventListener("click", function (event) {
     const search = document.querySelector(".doctor").value
