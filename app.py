@@ -393,11 +393,11 @@ def readJudgment(inputtext, T1, expiredDay):
                     con.close()
 
             driver.close()
-            driver.quit()
+            # driver.quit()
         except:
             print("司法院資料異常")
             driver.close()
-            driver.quit()
+            # driver.quit()
 
         T2 = time.perf_counter()
         print("司法院好了："+'%s毫秒' % ((T2 - T1)*1000))
