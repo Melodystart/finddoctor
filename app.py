@@ -180,8 +180,8 @@ def readReview(inputtext, T1, expiredDay):
             # print(places_sort)
             places = list(places_dict.keys())
             counts = len(places)
-            if counts > 5:  # 僅取前5個搜尋地點
-                counts = 5
+            if counts > 1:  # 僅取前1個搜尋地點
+                counts = 1
 
             # 使用threading
             threads = []
