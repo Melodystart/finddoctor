@@ -328,7 +328,7 @@ def readJudgment(inputtext, T1, expiredDay):
             result["data"].append(item)
         return result
     else:
-        if selenium_counts < 12:
+        if selenium_counts < 20:
             selenium_counts += 1
             print("第"+str(selenium_counts)+"個爬蟲開始爬")
             options = Options()
@@ -411,7 +411,7 @@ def readJudgment(inputtext, T1, expiredDay):
             print(keyword+"司法院好了："+'%s毫秒' % ((T2 - T1)*1000))
             return result, 200
         else:
-            print(keyword+"：因忙碌中，先不取司法院資料")
+            print("因忙碌中，先不取司法院資料")
             result["busy"] = True
             return result, 200
 
@@ -860,8 +860,8 @@ def getAll(keyword):
     con.close()
 
     threads = []
-    # threads.append(threading.Thread(target=readReview,
-    #                args=(keyword, T1, expiredDay)))
+    threads.append(threading.Thread(target=readReview,
+                   args=(keyword, T1, expiredDay)))
     # threads.append(threading.Thread(target=readBusiness,
     #                args=(keyword, T1, expiredDay)))
     threads.append(threading.Thread(target=readJudgment,
@@ -875,10 +875,10 @@ def getAll(keyword):
     # threads.append(threading.Thread(target=readDcard,
     #                args=(keyword, T1, expiredDay)))
 
-    for i in range(1):
+    for i in range(2):
         threads[i].start()
 
-    for i in range(1):
+    for i in range(2):
         threads[i].join()
 
     result = {}
