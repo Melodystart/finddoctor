@@ -875,10 +875,10 @@ def getAll(keyword):
     # threads.append(threading.Thread(target=readDcard,
     #                args=(keyword, T1, expiredDay)))
 
-    for i in range(2):
+    for i in range(1):
         threads[i].start()
 
-    for i in range(2):
+    for i in range(1):
         threads[i].join()
 
     result = {}
