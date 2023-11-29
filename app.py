@@ -326,7 +326,7 @@ def readJudgment(inputtext, T1, expiredDay):
             result["data"].append(item)
         return result
     else:
-        if selenium_counts < 12:
+        if selenium_counts < 20:
             selenium_counts += 1
             print("第"+str(selenium_counts)+"個爬蟲開始爬")
             options = Options()
@@ -896,9 +896,6 @@ def updatedata():
     cursor.execute(
         "DELETE FROM businessComment WHERE createdAt<=%s;", (expiredDay,))
     con.commit()
-    cursor.execute(
-        "DELETE FROM businessLink WHERE createdAt<=%s;", (expiredDay,))
-    con.commit()
     cursor.execute("DELETE FROM judgment WHERE createdAt<=%s;", (expiredDay,))
     con.commit()
     cursor.execute("DELETE FROM Ptt WHERE createdAt<=%s;", (expiredDay,))
@@ -919,8 +916,8 @@ def updatedata():
         getAll(keyword)
 
 
-def hi():
-    print("Hi apscheduler")
+# def hi():
+#     print("Hi apscheduler")
 
 
 # 1. 指定BackgroundScheduler不會阻塞主程式app的執行 v.s BlockingScheduler
