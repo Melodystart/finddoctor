@@ -84,8 +84,8 @@ def readReview(inputtext, T1, expiredDay):
         try:
             T3 = time.perf_counter()
             reviews = results[0]["reviews_data"]
-            print("API回應了 ："+results[0]["name"])
-            print('%s毫秒' % ((T3 - T1)*1000))
+            # print("API回應了 ："+results[0]["name"])
+            # print('%s毫秒' % ((T3 - T1)*1000))
 
             if len(reviews) > 0:
                 location = results[0]["name"]
@@ -117,13 +117,13 @@ def readReview(inputtext, T1, expiredDay):
                     con.close()
 
                 T4 = time.perf_counter()
-                print("資料append好了："+location)
-                print('%s毫秒' % ((T4 - T1)*1000))
+                # print("資料append好了："+location)
+                # print('%s毫秒' % ((T4 - T1)*1000))
 
             else:
                 T4 = time.perf_counter()
-                print("無資料："+results[0]["name"])
-                print('%s毫秒' % ((T4 - T1)*1000))
+                # print("無資料："+results[0]["name"])
+                # print('%s毫秒' % ((T4 - T1)*1000))
         except:
             pass
 
@@ -156,8 +156,10 @@ def readReview(inputtext, T1, expiredDay):
             item["link"] = d[4]
             item["location"] = d[5]
             result["data"].append(item)
+            print(keyword+"回傳先前review資料")
         return result
     else:
+        print(keyword+"開始連線reviewAPI")
         query = inputtext + "醫"
 
         API_KEY = get_key(".env", "API_KEY")
@@ -172,7 +174,7 @@ def readReview(inputtext, T1, expiredDay):
                 if ("醫院" in data["results"][i]["name"]) or ("診所" in data["results"][i]["name"]):
                     places_dict[data["results"][i]["place_id"]
                                 ] = data["results"][i]["user_ratings_total"]
-            print(places_dict)
+            # print(places_dict)
             # places_sort = dict(sorted(places_dict.items(),
             #                           key=lambda x: x[1], reverse=True))
             # print(places_sort)
@@ -189,14 +191,14 @@ def readReview(inputtext, T1, expiredDay):
                     target=callReviewAPI, args=(places[i], keyword, result)))
                 T2 = time.perf_counter()
                 threads[i].start()
-                print("開始呼叫API："+places[i])
-                print('%s毫秒' % ((T2 - T1)*1000))
+                # print("開始呼叫API："+places[i])
+                # print('%s毫秒' % ((T2 - T1)*1000))
 
             timeout = 60
             for i in range(counts):
                 threads[i].join(timeout)
         except:
-            print("review有錯誤")
+            print(keyword+"review有錯誤")
             pass
 
         con = conPool.get_connection()
@@ -212,7 +214,7 @@ def readReview(inputtext, T1, expiredDay):
         con.close()
 
         T5 = time.perf_counter()
-        print("review好了："+'%s毫秒' % ((T5 - T1)*1000))
+        print(keyword+"review好了："+'%s毫秒' % ((T5 - T1)*1000))
         return result, 200
 
 
@@ -299,9 +301,9 @@ def readBusiness(keyword, T1, expiredDay):
                 else:
                     pass
         except:
-            print("有錯誤，商周找不到資料")
+            print(keyword+"有錯誤，商周找不到資料")
         T2 = time.perf_counter()
-        print("商周好了："+'%s毫秒' % ((T2 - T1)*1000))
+        print(keyword+"商周好了："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 
@@ -400,16 +402,16 @@ def readJudgment(inputtext, T1, expiredDay):
 
                 # driver.quit()
             except:
-                print("司法院資料異常")
+                print(keyword+"：司法院資料異常")
                 # driver.quit()
             driver.close()
             selenium_counts -= 1
-            print("有爬蟲結束，剩下"+str(selenium_counts)+"個爬蟲")
+            print(keyword+"：爬蟲結束，剩下"+str(selenium_counts)+"個爬蟲")
             T2 = time.perf_counter()
-            print("司法院好了："+'%s毫秒' % ((T2 - T1)*1000))
+            print(keyword+"司法院好了："+'%s毫秒' % ((T2 - T1)*1000))
             return result, 200
         else:
-            print("爬蟲忙碌中")
+            print(keyword+"：因忙碌中，先不取司法院資料")
             result["busy"] = True
             return result, 200
 
@@ -527,7 +529,7 @@ def readPtt(inputtext, T1, expiredDay):
                 break
 
         T2 = time.perf_counter()
-        print("Ptt好了："+'%s毫秒' % ((T2 - T1)*1000))
+        print(keyword+"Ptt好了："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 
@@ -595,7 +597,7 @@ def readSearch(inputtext, T1, expiredDay):
             pass
 
         T2 = time.perf_counter()
-        print("Search好了："+'%s毫秒' % ((T2 - T1)*1000))
+        print(keyword+"Search好了："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 
@@ -665,7 +667,7 @@ def readDcard(inputtext, T1, expiredDay):
                 break
 
         T2 = time.perf_counter()
-        print("Dcard好了："+'%s毫秒' % ((T2 - T1)*1000))
+        print(keyword+"Dcard好了："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 
@@ -734,7 +736,7 @@ def readBlog(inputtext, T1, expiredDay):
         except:
             pass
         T2 = time.perf_counter()
-        print("Blog好了："+'%s毫秒' % ((T2 - T1)*1000))
+        print(keyword+"Blog好了："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 
@@ -785,8 +787,11 @@ def business():
 
 @app.route("/api/thank/<keyword>")
 def getthank(keyword):
+    T1 = time.perf_counter()
     data = readThank(keyword)
     result = viewThank(data)
+    T2 = time.perf_counter()
+    print(keyword+"感謝函好了："+'%s毫秒' % ((T2 - T1)*1000))
     return result
 
 
@@ -879,8 +884,7 @@ def getAll(keyword):
     result = {}
     result["ok"] = True
     T2 = time.perf_counter()
-    print("全都好了")
-    print('%s毫秒' % ((T2 - T1)*1000))
+    print(keyword+"全都好了："+'%s毫秒' % ((T2 - T1)*1000))
     return result
 
 
