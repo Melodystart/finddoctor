@@ -328,7 +328,7 @@ def readJudgment(inputtext, T1, expiredDay):
             result["data"].append(item)
         return result
     else:
-        if selenium_counts < 20:
+        if selenium_counts < 12:
             selenium_counts += 1
             print("第"+str(selenium_counts)+"個爬蟲開始爬")
             options = Options()
@@ -860,12 +860,12 @@ def getAll(keyword):
     con.close()
 
     threads = []
-    threads.append(threading.Thread(target=readReview,
-                   args=(keyword, T1, expiredDay)))
+    # threads.append(threading.Thread(target=readReview,
+    #                args=(keyword, T1, expiredDay)))
     # threads.append(threading.Thread(target=readBusiness,
     #                args=(keyword, T1, expiredDay)))
-    # threads.append(threading.Thread(target=readJudgment,
-    #                args=(keyword, T1, expiredDay)))
+    threads.append(threading.Thread(target=readJudgment,
+                   args=(keyword, T1, expiredDay)))
     # threads.append(threading.Thread(target=readPtt,
     #                args=(keyword, T1, expiredDay)))
     # threads.append(threading.Thread(target=readSearch,
