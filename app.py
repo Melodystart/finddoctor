@@ -19,7 +19,7 @@ from elasticsearch import Elasticsearch
 es = Elasticsearch("http://localhost:9200/")
 
 conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
-    ".env", "password"), host='localhost', database='finddoctor', pool_name='findConPool', pool_size=10,  auth_plugin='mysql_native_password')
+    ".env", "password"), host='localhost', database='finddoctor', pool_name='findConPool', pool_size=150,  auth_plugin='mysql_native_password')
 
 mysql_user = get_key(".env", "user")
 mysql_password = get_key(".env", "password")
