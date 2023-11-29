@@ -862,23 +862,23 @@ def getAll(keyword):
     threads = []
     threads.append(threading.Thread(target=readReview,
                    args=(keyword, T1, expiredDay)))
-    # threads.append(threading.Thread(target=readBusiness,
-    #                args=(keyword, T1, expiredDay)))
-    threads.append(threading.Thread(target=readJudgment,
+    threads.append(threading.Thread(target=readBusiness,
                    args=(keyword, T1, expiredDay)))
-    # threads.append(threading.Thread(target=readPtt,
+    # threads.append(threading.Thread(target=readJudgment,
     #                args=(keyword, T1, expiredDay)))
-    # threads.append(threading.Thread(target=readSearch,
-    #                args=(keyword, T1, expiredDay)))
-    # threads.append(threading.Thread(target=readBlog,
-    #                args=(keyword, T1, expiredDay)))
-    # threads.append(threading.Thread(target=readDcard,
-    #                args=(keyword, T1, expiredDay)))
+    threads.append(threading.Thread(target=readPtt,
+                   args=(keyword, T1, expiredDay)))
+    threads.append(threading.Thread(target=readSearch,
+                   args=(keyword, T1, expiredDay)))
+    threads.append(threading.Thread(target=readBlog,
+                   args=(keyword, T1, expiredDay)))
+    threads.append(threading.Thread(target=readDcard,
+                   args=(keyword, T1, expiredDay)))
 
-    for i in range(2):
+    for i in range(6):
         threads[i].start()
 
-    for i in range(2):
+    for i in range(6):
         threads[i].join()
 
     result = {}
