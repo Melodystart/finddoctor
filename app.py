@@ -864,8 +864,8 @@ def getAll(keyword):
                    args=(keyword, T1, expiredDay)))
     # threads.append(threading.Thread(target=readBusiness,
     #                args=(keyword, T1, expiredDay)))
-    threads.append(threading.Thread(target=readJudgment,
-                   args=(keyword, T1, expiredDay)))
+    # threads.append(threading.Thread(target=readJudgment,
+    #                args=(keyword, T1, expiredDay)))
     # threads.append(threading.Thread(target=readPtt,
     #                args=(keyword, T1, expiredDay)))
     # threads.append(threading.Thread(target=readSearch,
