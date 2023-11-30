@@ -1,0 +1,11 @@
+flask
+python-dotenv
+mysql-connector-python
+bs4
+pdfplumber
+elasticsearch
+selenium
+outscraper
+python-dateutil
+APScheduler
+fake_useragent
