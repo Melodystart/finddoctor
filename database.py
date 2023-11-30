@@ -1,10 +1,11 @@
 import mysql.connector
 from mysql.connector import pooling
-
+from dotenv import get_key
 con = mysql.connector.connect(
-    host='localhost',
-    user='root',
-    password='password',
+    host='finddoctor.collqfqpnilo.us-west-2.rds.amazonaws.com',
+    user=get_key(".env", "user"),
+    password=get_key(
+        ".env", "password")
 )
 cursor = con.cursor()
 

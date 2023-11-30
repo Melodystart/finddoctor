@@ -22,10 +22,7 @@ from elasticsearch import Elasticsearch
 es = Elasticsearch("http://localhost:9200/")
 
 conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
-    ".env", "password"), host='localhost', database='finddoctor', pool_name='findConPool', pool_size=32,  auth_plugin='mysql_native_password')
-
-mysql_user = get_key(".env", "user")
-mysql_password = get_key(".env", "password")
+    ".env", "password"), host='finddoctor.collqfqpnilo.us-west-2.rds.amazonaws.com', database='finddoctor', pool_name='findConPool', pool_size=32,  auth_plugin='mysql_native_password')
 
 toDay = datetime.today().date()
 expiredDay = toDay - timedelta(days=1)  # 設定資料期限為1天前到期
@@ -427,13 +424,6 @@ def readJudgment(inputtext, T1, expiredDay):
 
 
 def readThank(keyword):
-    # con = conPool.get_connection()
-    # cursor = con.cursor()
-    # cursor.execute(
-    #     "SELECT thankUrl.url, thank.target, thank.content, thank.month FROM thank LEFT JOIN thankUrl ON thank.month = thankUrl.month WHERE content LIKE %s;", ("%" + keyword + "%",))
-    # data = cursor.fetchall()
-    # cursor.close()
-    # con.close()
     res = es.search(index='thank', body={"size": 100, "query": {
         "match_phrase": {
             "content": keyword

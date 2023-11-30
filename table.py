@@ -2,11 +2,12 @@ import mysql.connector
 from mysql.connector import pooling
 import urllib.request
 from bs4 import BeautifulSoup
-
+from dotenv import get_key
 con = mysql.connector.connect(
-    host='localhost',
-    user='root',
-    password='password',
+    host='finddoctor.collqfqpnilo.us-west-2.rds.amazonaws.com',
+    user=get_key(".env", "user"),
+    password=get_key(
+        ".env", "password")
 )
 cursor = con.cursor()
 
@@ -49,6 +50,7 @@ cursor.execute(
     "CREATE table PttBoard (id BIGINT PRIMARY KEY auto_increment,board VARCHAR(255));")
 cursor.execute(
     "CREATE table Dcard (id BIGINT PRIMARY KEY auto_increment,doctor VARCHAR(255),link TEXT,title TEXT, text TEXT, createdAt DATE DEFAULT (CURRENT_DATE));")
+
 
 def getsoup(link):
     request = urllib.request.Request(link, headers={
