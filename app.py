@@ -16,8 +16,8 @@ from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from elasticsearch import Elasticsearch
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
+# from requests.adapters import HTTPAdapter
+# from urllib3.util.retry import Retry
 
 es = Elasticsearch("http://localhost:9200/")
 
@@ -38,12 +38,12 @@ app = Flask(
     static_url_path="/"
 )
 
-session = requests.Session()
-# session.keep_alive = False
-retry = Retry(total=5, backoff_factor=0.1)
-adapter = HTTPAdapter(max_retries=retry)
-session.mount('http://', adapter)
-session.mount('https://', adapter)
+# session = requests.Session()
+# # session.keep_alive = False
+# retry = Retry(total=5, backoff_factor=0.1)
+# adapter = HTTPAdapter(max_retries=retry)
+# session.mount('http://', adapter)
+# session.mount('https://', adapter)
 
 
 def error(result, message):
@@ -176,7 +176,7 @@ def readReview(inputtext, T1, expiredDay):
 
         url = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=" + \
             query+"&key="+API_KEY+"&language=zh-TW&region=TW"
-        data = session.get(url).json()
+        data = requests.get(url).json()
 
         try:
             places_dict = {}
@@ -262,7 +262,7 @@ def readBusiness(keyword, T1, expiredDay):
         start = (page - 1) * 10 + 1
         url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_BUSINESS}&q={query}&start={start}"
 
-        data = session.get(url).json()
+        data = requests.get(url).json()
         try:
             for i in range(len(data["items"])):
                 if (keyword+"醫師介紹和評價") in data["items"][i]["title"]:
@@ -509,7 +509,7 @@ def readPtt(inputtext, T1, expiredDay):
             start = (page - 1) * 10 + 1
             url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_PTT}&q={query}&start={start}"
 
-            data = session.get(url).json()
+            data = requests.get(url).json()
             try:
                 for i in range(len(data["items"])):
                     for board in boards:
@@ -581,7 +581,7 @@ def readSearch(inputtext, T1, expiredDay):
         start = (page - 1) * 10 + 1
         url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_ALL}&q={query}&start={start}"
 
-        data = session.get(url).json()
+        data = requests.get(url).json()
         try:
             for i in range(len(data["items"])):
                 if keyword in data["items"][i]["title"] or keyword in data["items"][i]["snippet"]:
@@ -649,7 +649,7 @@ def readDcard(inputtext, T1, expiredDay):
             start = (page - 1) * 10 + 1
             url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_Dcard}&q={query}&start={start}"
 
-            data = session.get(url).json()
+            data = requests.get(url).json()
             try:
                 for i in range(len(data["items"])):
                     if ("徵才" not in data["items"][i]["title"] and "新聞" not in data["items"][i]["title"] and (keyword in data["items"][i]["title"] or keyword in data["items"][i]["snippet"])):
@@ -719,7 +719,7 @@ def readBlog(inputtext, T1, expiredDay):
         start = (page - 1) * 10 + 1
         url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_BLOG}&q={query}&start={start}"
 
-        data = session.get(url).json()
+        data = requests.get(url).json()
         try:
             for i in range(len(data["items"])):
                 if "580913" not in data["items"][i]["title"]:
