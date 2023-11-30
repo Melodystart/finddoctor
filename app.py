@@ -39,7 +39,7 @@ app = Flask(
 )
 
 session = requests.Session()
-session.keep_alive = False
+# session.keep_alive = False
 retry = Retry(total=5, backoff_factor=0.1)
 adapter = HTTPAdapter(max_retries=retry)
 session.mount('http://', adapter)
@@ -176,7 +176,7 @@ def readReview(inputtext, T1, expiredDay):
 
         url = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=" + \
             query+"&key="+API_KEY+"&language=zh-TW&region=TW"
-        data = session.get(url, timeout=10).json()
+        data = session.get(url).json()
 
         try:
             places_dict = {}
@@ -262,7 +262,7 @@ def readBusiness(keyword, T1, expiredDay):
         start = (page - 1) * 10 + 1
         url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_BUSINESS}&q={query}&start={start}"
 
-        data = session.get(url, timeout=10).json()
+        data = session.get(url).json()
         try:
             for i in range(len(data["items"])):
                 if (keyword+"醫師介紹和評價") in data["items"][i]["title"]:
@@ -438,7 +438,7 @@ def readThank(keyword):
         "match_phrase": {
             "content": keyword
         }
-    }}, request_timeout=30)
+    }})
     data = res['hits']['hits']
     return data
 
@@ -509,7 +509,7 @@ def readPtt(inputtext, T1, expiredDay):
             start = (page - 1) * 10 + 1
             url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_PTT}&q={query}&start={start}"
 
-            data = session.get(url, timeout=10).json()
+            data = session.get(url).json()
             try:
                 for i in range(len(data["items"])):
                     for board in boards:
@@ -581,7 +581,7 @@ def readSearch(inputtext, T1, expiredDay):
         start = (page - 1) * 10 + 1
         url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_ALL}&q={query}&start={start}"
 
-        data = session.get(url, timeout=10).json()
+        data = session.get(url).json()
         try:
             for i in range(len(data["items"])):
                 if keyword in data["items"][i]["title"] or keyword in data["items"][i]["snippet"]:
@@ -649,7 +649,7 @@ def readDcard(inputtext, T1, expiredDay):
             start = (page - 1) * 10 + 1
             url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_Dcard}&q={query}&start={start}"
 
-            data = session.get(url, timeout=10).json()
+            data = session.get(url).json()
             try:
                 for i in range(len(data["items"])):
                     if ("徵才" not in data["items"][i]["title"] and "新聞" not in data["items"][i]["title"] and (keyword in data["items"][i]["title"] or keyword in data["items"][i]["snippet"])):
@@ -719,7 +719,7 @@ def readBlog(inputtext, T1, expiredDay):
         start = (page - 1) * 10 + 1
         url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_BLOG}&q={query}&start={start}"
 
-        data = session.get(url, timeout=10).json()
+        data = session.get(url).json()
         try:
             for i in range(len(data["items"])):
                 if "580913" not in data["items"][i]["title"]:
