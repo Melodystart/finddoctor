@@ -438,7 +438,7 @@ def readThank(keyword):
         "match_phrase": {
             "content": keyword
         }
-    }})
+    }}, request_timeout=30)
     data = res['hits']['hits']
     return data
 
