@@ -864,8 +864,8 @@ def getAll(keyword):
                    args=(keyword, T1, expiredDay)))
     threads.append(threading.Thread(target=readBusiness,
                    args=(keyword, T1, expiredDay)))
-    threads.append(threading.Thread(target=readJudgment,
-                   args=(keyword, T1, expiredDay)))
+    # threads.append(threading.Thread(target=readJudgment,
+    #                args=(keyword, T1, expiredDay)))
     threads.append(threading.Thread(target=readPtt,
                    args=(keyword, T1, expiredDay)))
     threads.append(threading.Thread(target=readSearch,
@@ -875,10 +875,10 @@ def getAll(keyword):
     threads.append(threading.Thread(target=readDcard,
                    args=(keyword, T1, expiredDay)))
 
-    for i in range(7):
+    for i in range(6):
         threads[i].start()
 
-    for i in range(7):
+    for i in range(6):
         threads[i].join()
 
     result = {}
