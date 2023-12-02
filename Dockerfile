@@ -3,4 +3,6 @@ WORKDIR /app
 ADD . /app
 RUN pip install -r requirements.txt
 EXPOSE 8080
-CMD python database.py & python table.py & python elastic.py & python app.py
+EXPOSE 9200
+COPY start.sh .
+CMD ["/bin/bash","-c","./start.sh"]
