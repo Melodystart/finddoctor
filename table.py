@@ -11,13 +11,8 @@ con = mysql.connector.connect(
 )
 cursor = con.cursor()
 
-cursor.execute("DROP database IF EXISTS test;")
-cursor.execute("CREATE database test;")
-cursor.execute("USE test;")
-cursor.execute(
-    "CREATE table hello (id BIGINT PRIMARY KEY auto_increment,text VARCHAR(255), createdAt TIMESTAMP DEFAULT (CURRENT_TIMESTAMP));")
-
-# 建立table
+cursor.execute("DROP database IF EXISTS finddoctor;")
+cursor.execute("CREATE database finddoctor;")
 cursor.execute("USE finddoctor;")
 cursor.execute("DROP table IF EXISTS review;")
 cursor.execute("DROP table IF EXISTS businessComment;")
@@ -27,13 +22,10 @@ cursor.execute("DROP table IF EXISTS Dcard;")
 cursor.execute("DROP table IF EXISTS search;")
 cursor.execute("DROP table IF EXISTS blog;")
 cursor.execute("DROP table IF EXISTS record;")
-cursor.execute("DROP table IF EXISTS newest;")
 cursor.execute("DROP table IF EXISTS PttBoard;")
 
 cursor.execute(
     "CREATE table record (id BIGINT PRIMARY KEY auto_increment,doctor VARCHAR(255), createdAt DATE DEFAULT (CURRENT_DATE));")
-cursor.execute(
-    "CREATE table newest (id BIGINT PRIMARY KEY auto_increment,doctor VARCHAR(255), createdAt DATE DEFAULT (CURRENT_DATE));")
 cursor.execute(
     "CREATE table review (id BIGINT PRIMARY KEY auto_increment,doctor VARCHAR(255), author VARCHAR(255),star BIGINT, timestamp TEXT,review TEXT, link TEXT, location VARCHAR(255), createdAt DATE DEFAULT (CURRENT_DATE));")
 cursor.execute(

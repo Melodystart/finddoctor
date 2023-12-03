@@ -182,9 +182,6 @@ for td in result:
             thankWEB(title, url)
 
         # 感謝函名稱、URL存放於資料庫
-        # cursor.execute(
-        #     "INSERT INTO thankUrl (month, url) VALUES (%s, %s)", (title, url))
-        # con.commit()
         res = es.index(index="thankurl", document={
             "month": title,
             "url": url,

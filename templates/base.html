@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FindDoctor</title>
+  <link rel="stylesheet" href="template.css">
+</head>
+
+<body>
+
+  <div class="nav">
+    <a class="logo" href="/">FindDoctor</a>
+    <div>
+      <div class="keyword">
+        <input class="doctor" placeholder="請輸入醫生名稱">
+        <img class="fas fa-search" src="/search.png" width="25" height="25">
+      </div>
+      <div class="mostbar">
+      </div>
+    </div>
+  </div>
+  {% block tab %}
+  {% endblock %}
+  <hr>
+
+  <div class="content-container">
+    <div class="content" style="color:yellow;">資料讀取中，請稍後</div>
+  </div>
+</body>
+
+{% block js %}
+{% endblock %}
+<script>
+  document.querySelector(".thank").href = "/thank?search=" + document.querySelector(".doctor").value
+  document.querySelector(".search").href = "/search?search=" + document.querySelector(".doctor").value
+  document.querySelector(".Ptt").href = "/Ptt?search=" + document.querySelector(".doctor").value
+  document.querySelector(".Dcard").href = "/Dcard?search=" + document.querySelector(".doctor").value
+  document.querySelector(".blog").href = "/blog?search=" + document.querySelector(".doctor").value
+  document.querySelector(".judgment").href = "/judgment?search=" + document.querySelector(".doctor").value
+  document.querySelector(".review").href = "/review?search=" + document.querySelector(".doctor").value
+  document.querySelector(".business").href = "/business?search=" + document.querySelector(".doctor").value
+</script>
+
+</html>

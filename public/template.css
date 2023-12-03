@@ -33,38 +33,74 @@ a {
   height: 40px;
   background-color: #F6F6F6;
   border-radius: 24px;
-  margin: 30px auto;
+  margin: 30px auto 0 auto;
   display: flex;
   justify-content: space-between;
-  font-size: 16px;
+  align-items: center;
+  font-size: 14px;
   font-weight: 600;
   color: #6E706F;
   overflow: hidden;
   position: relative;
 }
 
+.mostsearch {
+  max-width: 500px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 300;
+  color: whitesmoke;
+  overflow: hidden;
+  margin: 10px auto;
+}
+
+.mostbar {
+  max-width: 500px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 300;
+  color: whitesmoke;
+  overflow: hidden;
+  margin: 3px auto;
+}
+
+.item {
+  margin: 0 2px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.item:hover {
+  margin: 0 4px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 .doctor {
-  margin: 10px 35px 10px 15px;
+  margin: 10px 35px 10px 5px;
   display: flex;
   align-items: center;
   background-color: #F6F6F6;
   width: 100%;
 }
 
+.hospital {
+  margin: 0 5px 0 15px;
+  display: flex;
+  align-items: center;
+  width: 250px;
+}
+
 input {
   border: none;
   outline: none;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   display: flex;
   align-items: center;
 
-}
-
-.department {
-  margin: 10px 0px 10px 15px;
-  display: none;
-  align-items: center;
 }
 
 .fas {
@@ -95,7 +131,7 @@ input {
   height: 40px;
   background-color: #F6F6F6;
   border-radius: 24px;
-  margin: 30px 0;
+  margin: 30px 0 0 0;
   display: flex;
   justify-content: space-between;
   font-size: 16px;
@@ -164,4 +200,34 @@ input {
 
 .content-name {
   color: #9aa0a6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.dropdown {
+  display: flex;
+  align-items: center;
+}
+
+.dropdown select,
+.dropdown input {
+  height: 34px;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #555;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-right: 4px;
+}
+
+.dropdown select:focus,
+.dropdown input:focus {
+  outline: none;
+  border-color: #66afe9;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6);
 }

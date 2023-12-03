@@ -1,59 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FindDoctor</title>
-  <link rel="stylesheet" href="template.css">
-</head>
-
-<body>
-
-  <div class="nav">
-    <a class="logo" href="/">FindDoctor</a>
-    <div class="keyword">
-      <input class="doctor" placeholder="請輸入醫生名稱">
-      <img class="fas fa-search" src="/search.png" width="25" height="25">
-    </div>
+{% block tab %}
+<div class="tab">
+  <div class="category">
+    <a class="category-text thank" href="" style="color:white;">臺北榮總感謝函</a>
   </div>
-
-  <div class="tab">
-    <div class="category">
-      <a class="category-text thank" href="" style="color:white;">臺北榮總感謝函</a>
-    </div>
-    <div class="category">
-      <a class="category-text search" href="" style="color:white;">感謝</a>
-    </div>
-    <div class="category">
-      <a class="category-text Ptt" href="" style="color:white;">Ptt</a>
-    </div>
-    <div class="category">
-      <a class="category-text Dcard" href="" style="color:white;">Dcard</a>
-    </div>
-    <div class="category">
-      <a class="category-text blog" href="" style="color:white;">部落格</a>
-    </div>
-    <div class="category active">
-      <a class="category-text review" href="" style="color:rgb(137, 207, 240);">Google評論</a>
-    </div>
-    <div class="category">
-      <a class="category-text business" href="" style="color:white;">良醫健康網</a>
-    </div>
-    <div class="category">
-      <a class="category-text judgment" href="" style="color:white;">司法院判決書</a>
-    </div>
+  <div class="category">
+    <a class="category-text search" href="" style="color:white;">感謝</a>
   </div>
-  <hr>
-
-
-  <div class="content-container">
-    <div class="content" style="color:yellow;">資料讀取中，請稍後</div>
+  <div class="category">
+    <a class="category-text Ptt" href="" style="color:white;">Ptt</a>
   </div>
+  <div class="category">
+    <a class="category-text Dcard" href="" style="color:white;">Dcard</a>
+  </div>
+  <div class="category">
+    <a class="category-text blog" href="" style="color:white;">部落格</a>
+  </div>
+  <div class="category active">
+    <a class="category-text review" href="" style="color:rgb(137, 207, 240);">Google評論</a>
+  </div>
+  <div class="category">
+    <a class="category-text business" href="" style="color:white;">良醫健康網</a>
+  </div>
+  <div class="category">
+    <a class="category-text judgment" href="" style="color:white;">司法院判決書</a>
+  </div>
+</div>
+{% endblock %}
 
-</body>
-
+{% block js %}
 <script>
+  const inputtext = decodeURIComponent(window.location.search).replace("?search=", "").trim();
+  const inputList = inputtext.split(/\s+/);
+  const keyword = inputList[0];
+  const search = document.querySelector(".doctor");
+  search.value = inputtext;
+  const contentContainer = document.querySelector(".content-container");
+
+  function getMost() {
+    const container = document.querySelector(".mostbar")
+    url = "/api/mostsearch/" + inputtext;
+    fetch(url, { method: "GET" })
+      .then(response => response.json())
+      .then(result => {
+        const data = result["data"]
+        container.innerHTML = `熱搜：`
+        data.forEach(d => {
+          const item = document.createElement("div");
+          item.classList.add("item");
+          item.innerHTML = `<span class="item">${d}</span>`
+          container.appendChild(item);
+        })
+
+        const items = document.querySelectorAll(".item")
+        items.forEach(item => {
+          item.addEventListener("click", function (event) {
+            const search = item.textContent
+            return window.location.href = "/review?search=" + search
+          })
+        })
+      })
+      .catch(error => console.error("Error:", error))
+  }
+  getMost();
 
   function getReview() {
     function starImg(starcounts) {
@@ -65,14 +75,7 @@
       return star
     }
 
-    const inputtext = decodeURIComponent(window.location.search).replace("?search=", "").trim();
-    const inputList = inputtext.split(/\s+/);
-    const keyword = inputList[0];
-    const search = document.querySelector(".doctor");
-    search.value = inputtext;
-    const contentContainer = document.querySelector(".content-container");
-    url = "/api/review/" + inputtext; //
-
+    url = "/api/review/" + inputtext;
     fetch(url, { method: "GET" })
       .then(response => response.json())
       .then(result => {
@@ -82,9 +85,8 @@
           <div class="content" style="color:#f76b8a;">搜尋不到資料</div>
           <div class="from">搜尋關鍵字可嘗試增加醫院名稱，例如：王大明 榮總</div>`
         } else {
-          contentContainer.innerHTML = ``;
           const data = result["data"]
-
+          contentContainer.innerHTML = ``;
           data.forEach(d => {
             if (d["review"] === "") {
               contentContainer.innerHTML = `
@@ -113,7 +115,6 @@
       })
       .catch(error => console.error("Error:", error))
   }
-
   getReview();
 
   const submit = document.querySelector(".fas")
@@ -121,6 +122,7 @@
     const search = document.querySelector(".doctor").value
     return window.location.href = "/review?search=" + search
   })
+
   const input = document.querySelector(".doctor")
   input.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
@@ -128,14 +130,14 @@
       return window.location.href = "/review?search=" + search
     }
   })
-  document.querySelector(".thank").href = "/thank?search=" + document.querySelector(".doctor").value
-  document.querySelector(".search").href = "/search?search=" + document.querySelector(".doctor").value
-  document.querySelector(".Ptt").href = "/Ptt?search=" + document.querySelector(".doctor").value
-  document.querySelector(".Dcard").href = "/Dcard?search=" + document.querySelector(".doctor").value
-  document.querySelector(".blog").href = "/blog?search=" + document.querySelector(".doctor").value
-  document.querySelector(".judgment").href = "/judgment?search=" + document.querySelector(".doctor").value
-  document.querySelector(".review").href = "/review?search=" + document.querySelector(".doctor").value
-  document.querySelector(".business").href = "/business?search=" + document.querySelector(".doctor").value
-</script>
 
-</html>
+  // document.querySelector(".thank").href = "/thank?search=" + document.querySelector(".doctor").value
+  // document.querySelector(".search").href = "/search?search=" + document.querySelector(".doctor").value
+  // document.querySelector(".Ptt").href = "/Ptt?search=" + document.querySelector(".doctor").value
+  // document.querySelector(".Dcard").href = "/Dcard?search=" + document.querySelector(".doctor").value
+  // document.querySelector(".blog").href = "/blog?search=" + document.querySelector(".doctor").value
+  // document.querySelector(".judgment").href = "/judgment?search=" + document.querySelector(".doctor").value
+  // document.querySelector(".review").href = "/review?search=" + document.querySelector(".doctor").value
+  // document.querySelector(".business").href = "/business?search=" + document.querySelector(".doctor").value
+</script>
+{% endblock %}
