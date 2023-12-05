@@ -21,11 +21,14 @@ from elasticsearch import Elasticsearch
 
 es = Elasticsearch("http://localhost:9200/")
 
+# conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
+#     ".env", "password"), host='finddoctor.collqfqpnilo.us-west-2.rds.amazonaws.com', database='finddoctor', pool_name='findConPool', pool_size=17,  auth_plugin='mysql_native_password')
+
 conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
-    ".env", "password"), host='finddoctor.collqfqpnilo.us-west-2.rds.amazonaws.com', database='finddoctor', pool_name='findConPool', pool_size=17,  auth_plugin='mysql_native_password')
+    ".env", "password"), host='localhost', database='finddoctor', pool_name='findConPool', pool_size=17,  auth_plugin='mysql_native_password')
 
 toDay = datetime.today().date()
-expiredDay = toDay - timedelta(days=7)  # 設定資料期限為7天前到期
+expiredDay = toDay - timedelta(days=7)  # 設定資料期限為7天
 selenium_counts = 0
 
 app = Flask(
@@ -34,10 +37,12 @@ app = Flask(
     static_url_path="/"
 )
 
+
 def error(result, message):
     result["error"] = True
     result["message"] = message
     return result
+
 
 def untilNow(ts):
     # 設定utc時區
@@ -70,6 +75,7 @@ def untilNow(ts):
             return (str(months) + "個月前")
     else:
         return (str(years) + "年前")
+
 
 def readReview(inputtext, T1, expiredDay):
     def callReviewAPI(place_id, keyword, result):
@@ -206,6 +212,7 @@ def readReview(inputtext, T1, expiredDay):
         print(keyword+"review好了："+'%s毫秒' % ((T5 - T1)*1000))
         return result, 200
 
+
 def readBusiness(inputtext, T1, expiredDay):
     API_KEY = get_key(".env", "API_KEY")
     SEARCH_ENGINE_ID_BUSINESS = get_key(".env", "SEARCH_ENGINE_ID_BUSINESS")
@@ -293,6 +300,7 @@ def readBusiness(inputtext, T1, expiredDay):
         T2 = time.perf_counter()
         print(inputtext+"商周好了："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
+
 
 def readJudgment(inputtext, T1, expiredDay):
     global selenium_counts
@@ -403,6 +411,7 @@ def readJudgment(inputtext, T1, expiredDay):
             result["busy"] = True
             return result, 200
 
+
 def readThank(keyword):
     res = es.search(index='thank', body={"size": 100, "query": {
         "match_phrase": {
@@ -411,6 +420,7 @@ def readThank(keyword):
     }})
     data = res['hits']['hits']
     return data
+
 
 def viewThank(data):
     result = {}
@@ -429,6 +439,7 @@ def viewThank(data):
         item["when"] = d['_source']['month']
         result["data"].append(item)
     return result
+
 
 def readPtt(inputtext, T1, expiredDay):
     result = {}
@@ -510,6 +521,7 @@ def readPtt(inputtext, T1, expiredDay):
         print(keyword+"Ptt好了："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
+
 def readSearch(inputtext, T1, expiredDay):
     result = {}
     result["data"] = []
@@ -576,6 +588,7 @@ def readSearch(inputtext, T1, expiredDay):
         T2 = time.perf_counter()
         print(keyword+"Search好了："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
+
 
 def readDcard(inputtext, T1, expiredDay):
     result = {}
@@ -646,6 +659,7 @@ def readDcard(inputtext, T1, expiredDay):
         print(keyword+"Dcard好了："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
+
 def readBlog(inputtext, T1, expiredDay):
     result = {}
     result["data"] = []
@@ -714,6 +728,7 @@ def readBlog(inputtext, T1, expiredDay):
         print(keyword+"Blog好了："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
+
 def readMost():
     result = {}
     result["data"] = []
@@ -721,7 +736,7 @@ def readMost():
     con = conPool.get_connection()
     cursor = con.cursor()
     cursor.execute(
-        "SELECT doctor FROM record WHERE createdAt >= %s group by(doctor) ORDER BY count(doctor) DESC LIMIT 9;", (expiredDay,))
+        "SELECT doctor FROM record WHERE createdAt >= %s group by(doctor) ORDER BY count(doctor) DESC LIMIT 10;", (expiredDay,))
     data = cursor.fetchall()
     cursor.close()
     con.close()
@@ -730,41 +745,74 @@ def readMost():
         result["data"].append(d[0])
     return result
 
+
+def readDoctor():
+    con = conPool.get_connection()
+    cursor = con.cursor()
+    cursor.execute(
+        "SELECT department, name FROM doctor;")
+    data = cursor.fetchall()
+    cursor.close()
+    con.close()
+
+    result = {}
+    for d in data:
+        if d[0] not in result:
+            result[d[0]] = []
+        result[d[0]].append(d[1])
+    return result
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 @app.route("/thank")
 def thank():
     return render_template("thank.html")
 
+
 @app.route("/Ptt")
 def Ptt():
     return render_template("Ptt.html")
+
 
 @app.route("/search")
 def search():
     return render_template("search.html")
 
+
 @app.route("/Dcard")
 def Dcard():
     return render_template("Dcard.html")
+
 
 @app.route("/blog")
 def blog():
     return render_template("blog.html")
 
+
 @app.route("/judgment")
 def judgment():
     return render_template("judgment.html")
+
 
 @app.route("/review")
 def review():
     return render_template("review.html")
 
+
 @app.route("/business")
 def business():
     return render_template("business.html")
+
+
+@app.route("/api/doctor")
+def getDoctor():
+    result = readDoctor()
+    return result
+
 
 @app.route("/api/mostsearch/<inputtext>")
 def getMost(inputtext):
@@ -779,6 +827,7 @@ def getMost(inputtext):
     result = readMost()
     return result
 
+
 @app.route("/api/thank/<inputtext>")
 def getthank(inputtext):
     T1 = time.perf_counter()
@@ -788,11 +837,13 @@ def getthank(inputtext):
     print(inputtext+"感謝函好了："+'%s毫秒' % ((T2 - T1)*1000))
     return result
 
+
 @app.route("/api/Ptt/<inputtext>")
 def getPtt(inputtext):
     T1 = time.perf_counter()
     result = readPtt(inputtext, T1, expiredDay)
     return result
+
 
 @app.route("/api/Dcard/<inputtext>")
 def getDcard(inputtext):
@@ -800,11 +851,13 @@ def getDcard(inputtext):
     result = readDcard(inputtext, T1, expiredDay)
     return result
 
+
 @app.route("/api/search/<inputtext>")
 def getSearch(inputtext):
     T1 = time.perf_counter()
     result = readSearch(inputtext, T1, expiredDay)
     return result
+
 
 @app.route("/api/blog/<inputtext>")
 def getBlog(inputtext):
@@ -812,11 +865,13 @@ def getBlog(inputtext):
     result = readBlog(inputtext, T1, expiredDay)
     return result
 
+
 @app.route("/api/judgment/<inputtext>")
 def getJudgment(inputtext):
     T1 = time.perf_counter()
     result = readJudgment(inputtext, T1, expiredDay)
     return result
+
 
 @app.route("/api/review/<inputtext>")
 def getReview(inputtext):
@@ -824,11 +879,13 @@ def getReview(inputtext):
     result = readReview(inputtext, T1, expiredDay)
     return result
 
+
 @app.route("/api/business/<inputtext>")
 def getBusiness(inputtext):
     T1 = time.perf_counter()
     result = readBusiness(inputtext, T1, expiredDay)
     return result
+
 
 @app.route("/api/all/<inputtext>")
 def getAll(inputtext):
@@ -861,6 +918,7 @@ def getAll(inputtext):
     print(inputtext+"全都好了："+'%s毫秒' % ((T2 - T1)*1000))
     return result
 
+
 def updatedata():
     T1 = time.perf_counter()
     con = conPool.get_connection()
@@ -891,6 +949,7 @@ def updatedata():
         print(d)
         keyword = d[0]
         getAll(keyword)
+
 
 # 1. 指定BackgroundScheduler不會阻塞主程式app的執行 v.s BlockingScheduler
 scheduler = BackgroundScheduler(timezone="Asia/Taipei")

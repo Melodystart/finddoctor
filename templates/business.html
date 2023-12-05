@@ -31,14 +31,18 @@
 
 {% block js %}
 <script>
-  const inputtext = decodeURIComponent(window.location.search).replace("?search=", "").trim();
-  const search = document.querySelector(".doctor");
-  search.value = inputtext;
+  keyword = search;
+  // const inputtext = decodeURIComponent(window.location.search).replace("?search=", "").trim();
+  // let search = document.querySelector(".doctor");
+  // search.value = inputtext;
+  if (department === "") {
+    document.querySelector(".doctor").value = search;
+  }
   const contentContainer = document.querySelector(".content-container");
 
   function getMost() {
     const container = document.querySelector(".mostbar")
-    url = "/api/mostsearch/" + inputtext;
+    url = "/api/mostsearch/" + search;
     fetch(url, { method: "GET" })
       .then(response => response.json())
       .then(result => {
@@ -55,7 +59,7 @@
         items.forEach(item => {
           item.addEventListener("click", function (event) {
             const search = item.textContent
-            return window.location.href = "/business?search=" + search
+            return window.location.href = "/business?search=" + search + "&department=" + department;
           })
         })
       })
@@ -64,7 +68,7 @@
   getMost();
 
   function getBusiness() {
-    url = "/api/business/" + inputtext;
+    url = "/api/business/" + search;
 
     fetch(url, { method: "GET" })
       .then(response => response.json())
@@ -80,7 +84,7 @@
             const content = document.createElement("div");
             content.classList.add("content");
 
-            text = d["comment"].replace(inputtext, `<span class="highlight">${inputtext}</span>`)
+            text = d["comment"].replace(search, `<span class="highlight">${search}</span>`)
 
             content.innerHTML = `
             <a href="${d["link"]}" target="_blank"><span class="content-title">${d["posttime"]}</span>
@@ -97,24 +101,16 @@
 
   const submit = document.querySelector(".fas")
   submit.addEventListener("click", function (event) {
-    // const search = document.querySelector(".doctor").value
-    return window.location.href = "/business?search=" + search
+    search = getsearch()
+    return window.location.href = "/business?search=" + search + "&department=" + department;
   })
 
   const input = document.querySelector(".doctor")
   input.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
-      // const search = document.querySelector(".doctor").value
-      return window.location.href = "/business?search=" + search
+      search = getsearch()
+      return window.location.href = "/business?search=" + search + "&department=" + department;
     }
   })
-  // document.querySelector(".thank").href = "/thank?search=" + document.querySelector(".doctor").value
-  // document.querySelector(".search").href = "/search?search=" + document.querySelector(".doctor").value
-  // document.querySelector(".Ptt").href = "/Ptt?search=" + document.querySelector(".doctor").value
-  // document.querySelector(".Dcard").href = "/Dcard?search=" + document.querySelector(".doctor").value
-  // document.querySelector(".blog").href = "/blog?search=" + document.querySelector(".doctor").value
-  // document.querySelector(".judgment").href = "/judgment?search=" + document.querySelector(".doctor").value
-  // document.querySelector(".review").href = "/review?search=" + document.querySelector(".doctor").value
-  // document.querySelector(".business").href = "/business?search=" + document.querySelector(".doctor").value
 </script>
 {% endblock %}

@@ -14,6 +14,17 @@
     <a class="logo" href="/">FindDoctor</a>
     <div>
       <div class="keyword">
+        <div class="hospital">臺北榮總</div>
+        <div class="dropdown">
+          <select name="county" id="county_box">
+            <option value="">選擇科別</option>
+          </select>
+          <select name="district" id="district_box">
+            <option value="">選擇醫生</option>
+          </select>
+        </div>
+        <span class="sep">或</span>
+
         <input class="doctor" placeholder="請輸入醫生名稱">
         <img class="fas fa-search" src="/search.png" width="25" height="25">
       </div>
@@ -29,18 +40,92 @@
     <div class="content" style="color:yellow;">資料讀取中，請稍後</div>
   </div>
 </body>
-
+<script>
+  const words = decodeURIComponent(window.location.search).split("&");
+  let search = words[0].slice(words[0].indexOf("=") + 1);
+  let department = words[1].slice(words[1].indexOf("=") + 1);
+  let keyword = ""
+  const inputform = document.querySelector(".doctor");
+  if (department === "") {
+    inputform.value = search;
+  }
+</script>
 {% block js %}
 {% endblock %}
 <script>
-  document.querySelector(".thank").href = "/thank?search=" + document.querySelector(".doctor").value
-  document.querySelector(".search").href = "/search?search=" + document.querySelector(".doctor").value
-  document.querySelector(".Ptt").href = "/Ptt?search=" + document.querySelector(".doctor").value
-  document.querySelector(".Dcard").href = "/Dcard?search=" + document.querySelector(".doctor").value
-  document.querySelector(".blog").href = "/blog?search=" + document.querySelector(".doctor").value
-  document.querySelector(".judgment").href = "/judgment?search=" + document.querySelector(".doctor").value
-  document.querySelector(".review").href = "/review?search=" + document.querySelector(".doctor").value
-  document.querySelector(".business").href = "/business?search=" + document.querySelector(".doctor").value
+  function getDoctor() {
+    url = "/api/doctor";
+
+    fetch(url, { method: "GET" })
+      .then(response => response.json())
+      .then(database => {
+        const county_box = document.querySelector('#county_box');
+        const district_box = document.querySelector('#district_box');
+        let selected_county;
+
+        Object.getOwnPropertyNames(database).forEach((county) => {
+          if (county === department) {
+            county_box.innerHTML += `<option value="${county}" selected>${county}</option>`;
+
+            database[department].forEach((district) => {
+              if (district === search) {
+                district_box.innerHTML += `<option value="${district}" selected>${district}</option>`;
+              } else {
+                district_box.innerHTML += `<option value="${district}">${district}</option>`;
+              }
+            })
+
+          } else {
+            county_box.innerHTML += `<option value="${county}">${county}</option>`;
+          }
+        });
+
+        county_box.addEventListener('change', () => {
+          selected_county = county_box.options[county_box.selectedIndex].value;
+          district_box.innerHTML = '<option value="">選擇醫生</option>';
+
+          database[selected_county].forEach((district) => {
+            district_box.innerHTML += `<option value="${district}">${district}</option>`;
+          })
+        });
+
+        district_box.addEventListener('change', () => {
+          document.querySelector(".doctor").value = "";
+        })
+
+        inputform.addEventListener("click", () => {
+          county_box.innerHTML = `<option value="">選擇科別</option>`;
+          district_box.innerHTML = `<option value="">選擇醫生</option>`
+          Object.getOwnPropertyNames(database).forEach((county) => {
+            county_box.innerHTML += `<option value="${county}">${county}</option>`;
+          })
+        })
+
+      })
+      .catch(error => console.error("Error:", error))
+  }
+
+  function getsearch() {
+    if (document.querySelector(".doctor").value === "") {
+      search = document.querySelector("#district_box").value;
+      department = document.querySelector("#county_box").value;
+    } else {
+      search = document.querySelector(".doctor").value;
+      department = "";
+    }
+    return search
+  }
+
+  getDoctor();
+
+  document.querySelector(".thank").href = "/thank?search=" + search + "&department=" + department
+  document.querySelector(".search").href = "/search?search=" + search + "&department=" + department
+  document.querySelector(".Ptt").href = "/Ptt?search=" + search + "&department=" + department
+  document.querySelector(".Dcard").href = "/Dcard?search=" + search + "&department=" + department
+  document.querySelector(".blog").href = "/blog?search=" + search + "&department=" + department
+  document.querySelector(".judgment").href = "/judgment?search=" + search + "&department=" + department
+  document.querySelector(".review").href = "/review?search=" + search + "&department=" + department
+  document.querySelector(".business").href = "/business?search=" + search + "&department=" + department
 </script>
 
 </html>

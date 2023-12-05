@@ -31,16 +31,19 @@
 
 {% block js %}
 <script>
-  const inputtext = decodeURIComponent(window.location.search).replace("?search=", "").trim();
-  const inputList = inputtext.split(/\s+/)
-  const keyword = inputList[0]
-  const search = document.querySelector(".doctor");
-  search.value = inputtext;
+  // const inputtext = decodeURIComponent(window.location.search).replace("?search=", "").trim();
+  const inputList = search.split(/\s+/)
+  keyword = inputList[0];
+  // let search = document.querySelector(".doctor");
+  // search.value = inputtext;
+  if (department === "") {
+    document.querySelector(".doctor").value = search;
+  }
   const contentContainer = document.querySelector(".content-container")
 
   function getMost() {
     const container = document.querySelector(".mostbar")
-    url = "/api/mostsearch/" + inputtext;
+    url = "/api/mostsearch/" + search;
     fetch(url, { method: "GET" })
       .then(response => response.json())
       .then(result => {
@@ -57,7 +60,7 @@
         items.forEach(item => {
           item.addEventListener("click", function (event) {
             const search = item.textContent
-            return window.location.href = "/blog?search=" + search
+            return window.location.href = "/blog?search=" + search + "&department=" + department;
           })
         })
       })
@@ -66,7 +69,7 @@
   getMost();
 
   function getBlog() {
-    url = "/api/blog/" + inputtext;
+    url = "/api/blog/" + search;
 
     fetch(url, { method: "GET" })
       .then(response => response.json())
@@ -102,13 +105,15 @@
 
   const submit = document.querySelector(".fas")
   submit.addEventListener("click", function (event) {
-    return window.location.href = "/blog?search=" + document.querySelector(".doctor").value
+    search = getsearch()
+    return window.location.href = "/blog?search=" + search + "&department=" + department;
   })
 
   const input = document.querySelector(".doctor")
   input.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
-      return window.location.href = "/blog?search=" + document.querySelector(".doctor").value
+      search = getsearch()
+      return window.location.href = "/blog?search=" + search + "&department=" + department;
     }
   })
 </script>

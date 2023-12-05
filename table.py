@@ -3,6 +3,10 @@ from mysql.connector import pooling
 import urllib.request
 from bs4 import BeautifulSoup
 from dotenv import get_key
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
 con = mysql.connector.connect(
     host='finddoctor.collqfqpnilo.us-west-2.rds.amazonaws.com',
     user=get_key(".env", "user"),
@@ -23,7 +27,9 @@ cursor.execute("DROP table IF EXISTS search;")
 cursor.execute("DROP table IF EXISTS blog;")
 cursor.execute("DROP table IF EXISTS record;")
 cursor.execute("DROP table IF EXISTS PttBoard;")
+cursor.execute("DROP table IF EXISTS doctor;")
 
+cursor.execute("CREATE table doctor (id BIGINT PRIMARY KEY auto_increment,department VARCHAR(255) NOT NULL,name VARCHAR(255) NOT NULL,url TEXT NOT NULL);")
 cursor.execute(
     "CREATE table record (id BIGINT PRIMARY KEY auto_increment,doctor VARCHAR(255), createdAt DATE DEFAULT (CURRENT_DATE));")
 cursor.execute(
@@ -42,6 +48,49 @@ cursor.execute(
     "CREATE table PttBoard (id BIGINT PRIMARY KEY auto_increment,board VARCHAR(255));")
 cursor.execute(
     "CREATE table Dcard (id BIGINT PRIMARY KEY auto_increment,doctor VARCHAR(255),link TEXT,title TEXT, text TEXT, createdAt DATE DEFAULT (CURRENT_DATE));")
+
+
+# 取得榮總醫生掛號名單
+def getSoupDoctor(url):
+    with urllib.request.urlopen(url) as response:
+        html = response.read().decode("big5-hkscs")
+        return BeautifulSoup(html, "html.parser")
+
+
+def getUrl(words):
+    first = words.index("'")+1
+    end = words.index("'", first)
+    return words[slice(first, end)]
+
+
+url = "https://www6.vghtpe.gov.tw/reg/sectList.do?type=return"
+
+departmentList = getSoupDoctor(url).find_all('a')
+
+for i in range(len(departmentList)):
+    if "opdTimetable" in departmentList[i].get("href"):
+        url_1 = "https://www6.vghtpe.gov.tw/reg/" + \
+            departmentList[i].get("href")
+        url_2 = url_1.replace("page=1", "page=2")
+        urlList = [url_1, url_2]
+        department = departmentList[i].text
+        doctorNameList = []
+
+        for url in urlList:
+            doctorList = getSoupDoctor(url).find_all("a")
+
+            for i in range(len(doctorList)):
+                if "javascript:CreateWindow(" in doctorList[i].get("href"):
+                    url = getUrl(doctorList[i].get("href"))
+                    doctor = doctorList[i].text.strip()
+
+                    if (doctor not in doctorNameList) & len(doctor) > 0:
+                        doctorNameList.append(doctor)
+                        cursor.execute(
+                            "INSERT INTO doctor (department, name, url) VALUES (%s, %s,%s)", (department, doctor, url))
+                        con.commit()
+
+# 取得PTT醫療板及地區板
 
 
 def getsoup(link):

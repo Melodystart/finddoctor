@@ -31,14 +31,23 @@
 
 {% block js %}
 <script>
-  const keyword = decodeURIComponent(window.location.search).replace("?search=", "");
-  const search = document.querySelector(".doctor");
-  search.value = keyword;
+  // const keyword = decodeURIComponent(window.location.search).replace("?search=", "");
+  // let search = document.querySelector(".doctor");
+  // search.value = keyword;
+  const inputList = search.split(/\s+/);
+  let searches = "";
+  inputList.forEach(input => {
+    searches += " & " + input;
+  })
+  // keyword = inputList[0];
+  if (department === "") {
+    document.querySelector(".doctor").value = search;
+  }
   const contentContainer = document.querySelector(".content-container");
 
   function getMost() {
     const container = document.querySelector(".mostbar")
-    url = "/api/mostsearch/" + keyword;
+    url = "/api/mostsearch/" + search;
     fetch(url, { method: "GET" })
       .then(response => response.json())
       .then(result => {
@@ -55,7 +64,7 @@
         items.forEach(item => {
           item.addEventListener("click", function (event) {
             const search = item.textContent
-            return window.location.href = "/judgment?search=" + search
+            return window.location.href = "/judgment?search=" + search + "&department=" + department;
           })
         })
       })
@@ -64,7 +73,7 @@
   getMost();
 
   function getJudgment() {
-    url = "/api/judgment/" + keyword;
+    url = "/api/judgment/" + search;
 
     fetch(url, { method: "GET" })
       .then(response => response.json())
@@ -80,7 +89,7 @@
           <div class="from">搜尋關鍵字可嘗試僅輸入醫生名稱，例如：王大明</div>`
           } else {
             const data = result["data"]
-            contentContainer.innerHTML = `<div class="content" style="color:#f76b8a;">搜尋結果包含：醫師 & ${keyword}</div>
+            contentContainer.innerHTML = `<div class="content" style="color:#f76b8a;">搜尋結果包含：醫師${searches}</div>
             <div class="from">關鍵字可嘗試輸入 <span style="box-shadow: 0 1px;">醫師名稱  &nbsp;&nbsp;醫院全名</span> 以縮小範圍，例如：<span style="box-shadow: 0 1px;">王大明  &nbsp;&nbsp;臺北榮民總醫院</span></span>`;
             data.forEach(d => {
               if (d["url"] === "") {
@@ -105,24 +114,16 @@
 
   const submit = document.querySelector(".fas")
   submit.addEventListener("click", function (event) {
-    const search = document.querySelector(".doctor").value
-    return window.location.href = "/judgment?search=" + search
+    search = getsearch()
+    return window.location.href = "/judgment?search=" + search + "&department=" + department;
   })
 
   const input = document.querySelector(".doctor")
   input.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
-      const search = document.querySelector(".doctor").value
-      return window.location.href = "/judgment?search=" + search
+      search = getsearch()
+      return window.location.href = "/judgment?search=" + search + "&department=" + department;
     }
   })
-  // document.querySelector(".thank").href = "/thank?search=" + document.querySelector(".doctor").value
-  // document.querySelector(".search").href = "/search?search=" + document.querySelector(".doctor").value
-  // document.querySelector(".Ptt").href = "/Ptt?search=" + document.querySelector(".doctor").value
-  // document.querySelector(".Dcard").href = "/Dcard?search=" + document.querySelector(".doctor").value
-  // document.querySelector(".blog").href = "/blog?search=" + document.querySelector(".doctor").value
-  // document.querySelector(".judgment").href = "/judgment?search=" + document.querySelector(".doctor").value
-  // document.querySelector(".review").href = "/review?search=" + document.querySelector(".doctor").value
-  // document.querySelector(".business").href = "/business?search=" + document.querySelector(".doctor").value
 </script>
 {% endblock %}
