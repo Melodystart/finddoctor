@@ -44,15 +44,42 @@
   const words = decodeURIComponent(window.location.search).split("&");
   let search = words[0].slice(words[0].indexOf("=") + 1);
   let department = words[1].slice(words[1].indexOf("=") + 1);
-  let keyword = ""
   const inputform = document.querySelector(".doctor");
   if (department === "") {
     inputform.value = search;
   }
+  const contentContainer = document.querySelector(".content-container")
 </script>
 {% block js %}
 {% endblock %}
 <script>
+  function getMost() {
+    const container = document.querySelector(".mostbar")
+    url = "/api/mostsearch/" + search;
+    fetch(url, { method: "GET" })
+      .then(response => response.json())
+      .then(result => {
+        const data = result["data"]
+        container.innerHTML = `熱搜：`
+        data.forEach(d => {
+          const item = document.createElement("div");
+          item.classList.add("item");
+          item.innerHTML = `<span class="item">${d}</span>`
+          container.appendChild(item);
+        })
+
+        const items = document.querySelectorAll(".item")
+        items.forEach(item => {
+          item.addEventListener("click", function (event) {
+            const search = item.textContent;
+            department = "";
+            return window.location.href = page + "?search=" + search + "&department=" + department
+          })
+        })
+      })
+      .catch(error => console.error("Error:", error))
+  }
+
   function getDoctor() {
     url = "/api/doctor";
 
@@ -116,7 +143,34 @@
     return search
   }
 
+  getMost();
   getDoctor();
+
+  const submit = document.querySelector(".fas")
+  submit.addEventListener("click", function (event) {
+    if (document.querySelector(".doctor").value === "") {
+      search = document.querySelector("#district_box").value;
+      department = document.querySelector("#county_box").value;
+    } else {
+      search = document.querySelector(".doctor").value;
+      department = "";
+    }
+    return window.location.href = page + "?search=" + search + "&department=" + department
+  })
+
+  const input = document.querySelector(".doctor")
+  input.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+      if (document.querySelector(".doctor").value === "") {
+        search = document.querySelector("#district_box").value;
+        department = document.querySelector("#county_box").value;
+      } else {
+        search = document.querySelector(".doctor").value;
+        department = "";
+      }
+      return window.location.href = page + "?search=" + search + "&department=" + department
+    }
+  })
 
   document.querySelector(".thank").href = "/thank?search=" + search + "&department=" + department
   document.querySelector(".search").href = "/search?search=" + search + "&department=" + department

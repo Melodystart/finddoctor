@@ -31,43 +31,8 @@
 
 {% block js %}
 <script>
-  // const inputtext = decodeURIComponent(window.location.search).replace("?search=", "").trim();
+  const page = "/review"
   const inputList = search.split(/\s+/);
-  keyword = inputList[0];
-  // let search = document.querySelector(".doctor");
-  // search.value = inputtext;
-  if (department === "") {
-    document.querySelector(".doctor").value = search;
-  }
-  const contentContainer = document.querySelector(".content-container");
-
-  function getMost() {
-    const container = document.querySelector(".mostbar")
-    url = "/api/mostsearch/" + search;
-    fetch(url, { method: "GET" })
-      .then(response => response.json())
-      .then(result => {
-        const data = result["data"]
-        container.innerHTML = `熱搜：`
-        data.forEach(d => {
-          const item = document.createElement("div");
-          item.classList.add("item");
-          item.innerHTML = `<span class="item">${d}</span>`
-          container.appendChild(item);
-        })
-
-        const items = document.querySelectorAll(".item")
-        items.forEach(item => {
-          item.addEventListener("click", function (event) {
-            const search = item.textContent
-            return window.location.href = "/review?search=" + search + "&department=" + department;
-          })
-        })
-      })
-      .catch(error => console.error("Error:", error))
-  }
-  getMost();
-
   function getReview() {
     function starImg(starcounts) {
       starcounts = Number(starcounts)
@@ -119,19 +84,5 @@
       .catch(error => console.error("Error:", error))
   }
   getReview();
-
-  const submit = document.querySelector(".fas")
-  submit.addEventListener("click", function (event) {
-    search = getsearch()
-    return window.location.href = "/review?search=" + search + "&department=" + department;
-  })
-
-  const input = document.querySelector(".doctor")
-  input.addEventListener("keypress", function (event) {
-    if (event.key === "Enter") {
-      search = getsearch()
-      return window.location.href = "/review?search=" + search + "&department=" + department;
-    }
-  })
 </script>
 {% endblock %}

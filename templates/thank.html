@@ -31,43 +31,9 @@
 
 {% block js %}
 <script>
-  keyword = search;
-  // const keyword = decodeURIComponent(window.location.search).replace("?search=", "");
-  // let search = document.querySelector(".doctor");
-  if (department === "") {
-    document.querySelector(".doctor").value = search;
-  }
-  const contentContainer = document.querySelector(".content-container")
-
-  function getMost() {
-    const container = document.querySelector(".mostbar")
-    url = "/api/mostsearch/" + keyword;
-    fetch(url, { method: "GET" })
-      .then(response => response.json())
-      .then(result => {
-        const data = result["data"]
-        container.innerHTML = `熱搜：`
-        data.forEach(d => {
-          const item = document.createElement("div");
-          item.classList.add("item");
-          item.innerHTML = `<span class="item">${d}</span>`
-          container.appendChild(item);
-        })
-
-        const items = document.querySelectorAll(".item")
-        items.forEach(item => {
-          item.addEventListener("click", function (event) {
-            const search = item.textContent
-            return window.location.href = "/thank?search=" + search + "&department=" + department
-          })
-        })
-      })
-      .catch(error => console.error("Error:", error))
-  }
-  getMost();
-
+  const page = "/thank"
   function getThank() {
-    url = "/api/thank/" + keyword;
+    url = "/api/thank/" + search;
 
     fetch(url, { method: "GET" })
       .then(response => response.json())
@@ -84,8 +50,8 @@
             const content = document.createElement("div");
             content.classList.add("content");
 
-            title = d["title"].replaceAll(keyword, `<span class="highlight">${keyword}</span>`)
-            text = d["text"].replaceAll(keyword, `<span class="highlight">${keyword}</span>`)
+            title = d["title"].replaceAll(search, `<span class="highlight">${search}</span>`)
+            text = d["text"].replaceAll(search, `<span class="highlight">${search}</span>`)
 
             content.innerHTML = `
               <div class="content-title"><a class="content-link" href="${d["url"]}" target="_blank">${d["when"]}：${title}</a>
@@ -98,29 +64,5 @@
       .catch(error => console.error("Error:", error))
   }
   getThank();
-
-  const submit = document.querySelector(".fas")
-  submit.addEventListener("click", function (event) {
-    if (document.querySelector(".doctor").value === "") {
-      search = document.querySelector("#district_box").value
-      department = document.querySelector("#county_box").value
-    } else {
-      search = document.querySelector(".doctor").value
-    }
-    return window.location.href = "/thank?search=" + search + "&department=" + department
-  })
-
-  const input = document.querySelector(".doctor")
-  input.addEventListener("keypress", function (event) {
-    if (event.key === "Enter") {
-      if (document.querySelector(".doctor").value === "") {
-        search = document.querySelector("#district_box").value
-        department = document.querySelector("#county_box").value
-      } else {
-        search = document.querySelector(".doctor").value
-      }
-      return window.location.href = "/thank?search=" + search + "&department=" + department
-    }
-  })
 </script>
 {% endblock %}

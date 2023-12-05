@@ -31,47 +31,12 @@
 
 {% block js %}
 <script>
-  // const keyword = decodeURIComponent(window.location.search).replace("?search=", "");
-  // let search = document.querySelector(".doctor");
-  // search.value = keyword;
+  const page = "/judgment"
   const inputList = search.split(/\s+/);
-  let searches = "";
+  let searchchain = "";
   inputList.forEach(input => {
-    searches += " & " + input;
+    searchchain += " & " + input;
   })
-  // keyword = inputList[0];
-  if (department === "") {
-    document.querySelector(".doctor").value = search;
-  }
-  const contentContainer = document.querySelector(".content-container");
-
-  function getMost() {
-    const container = document.querySelector(".mostbar")
-    url = "/api/mostsearch/" + search;
-    fetch(url, { method: "GET" })
-      .then(response => response.json())
-      .then(result => {
-        const data = result["data"]
-        container.innerHTML = `熱搜：`
-        data.forEach(d => {
-          const item = document.createElement("div");
-          item.classList.add("item");
-          item.innerHTML = `<span class="item">${d}</span>`
-          container.appendChild(item);
-        })
-
-        const items = document.querySelectorAll(".item")
-        items.forEach(item => {
-          item.addEventListener("click", function (event) {
-            const search = item.textContent
-            return window.location.href = "/judgment?search=" + search + "&department=" + department;
-          })
-        })
-      })
-      .catch(error => console.error("Error:", error))
-  }
-  getMost();
-
   function getJudgment() {
     url = "/api/judgment/" + search;
 
@@ -89,7 +54,7 @@
           <div class="from">搜尋關鍵字可嘗試僅輸入醫生名稱，例如：王大明</div>`
           } else {
             const data = result["data"]
-            contentContainer.innerHTML = `<div class="content" style="color:#f76b8a;">搜尋結果包含：醫師${searches}</div>
+            contentContainer.innerHTML = `<div class="content" style="color:#f76b8a;">搜尋結果包含：醫師${searchchain}</div>
             <div class="from">關鍵字可嘗試輸入 <span style="box-shadow: 0 1px;">醫師名稱  &nbsp;&nbsp;醫院全名</span> 以縮小範圍，例如：<span style="box-shadow: 0 1px;">王大明  &nbsp;&nbsp;臺北榮民總醫院</span></span>`;
             data.forEach(d => {
               if (d["url"] === "") {
@@ -111,19 +76,5 @@
       .catch(error => console.error("Error:", error))
   }
   getJudgment();
-
-  const submit = document.querySelector(".fas")
-  submit.addEventListener("click", function (event) {
-    search = getsearch()
-    return window.location.href = "/judgment?search=" + search + "&department=" + department;
-  })
-
-  const input = document.querySelector(".doctor")
-  input.addEventListener("keypress", function (event) {
-    if (event.key === "Enter") {
-      search = getsearch()
-      return window.location.href = "/judgment?search=" + search + "&department=" + department;
-    }
-  })
 </script>
 {% endblock %}
