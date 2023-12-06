@@ -21,11 +21,8 @@ from elasticsearch import Elasticsearch
 
 es = Elasticsearch("http://localhost:9200/")
 
-# conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
-#     ".env", "password"), host='finddoctor.collqfqpnilo.us-west-2.rds.amazonaws.com', database='finddoctor', pool_name='findConPool', pool_size=17,  auth_plugin='mysql_native_password')
-
 conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
-    ".env", "password"), host='localhost', database='finddoctor', pool_name='findConPool', pool_size=17,  auth_plugin='mysql_native_password')
+    ".env", "password"), host='finddoctor.collqfqpnilo.us-west-2.rds.amazonaws.com', database='finddoctor', pool_name='findConPool', pool_size=40,  auth_plugin='mysql_native_password')
 
 toDay = datetime.today().date()
 expiredDay = toDay - timedelta(days=7)  # 設定資料期限為7天
@@ -126,8 +123,11 @@ def readReview(inputtext, T1, expiredDay):
 
     try:
         keyword = inputtext.split()[0]
+        location = inputtext.split()[1]
+        query = location
     except:
         keyword = inputtext
+        query = inputtext + "醫"
 
     result = {}
     result["data"] = []
@@ -157,7 +157,6 @@ def readReview(inputtext, T1, expiredDay):
         return result
     else:
         print(keyword+"開始連線reviewAPI")
-        query = inputtext + "醫"
 
         API_KEY = get_key(".env", "API_KEY")
 

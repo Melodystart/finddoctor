@@ -55,7 +55,7 @@
           } else {
             const data = result["data"]
             contentContainer.innerHTML = `<div class="content" style="color:#f76b8a;">搜尋結果包含：醫師${searchchain}</div>
-            <div class="from">關鍵字可嘗試輸入 <span style="box-shadow: 0 1px;">醫師名稱  &nbsp;&nbsp;醫院全名</span> 以縮小範圍，例如：<span style="box-shadow: 0 1px;">王大明  &nbsp;&nbsp;臺北榮民總醫院</span></span>`;
+            <div class="from">關鍵字可嘗試輸入 <span style="box-shadow: 0 1px;">醫師名稱 &nbsp;醫院全名</span> 以縮小範圍，例如：<span style="box-shadow: 0 1px;">王大明 &nbsp;臺北榮民總醫院</span></span>`;
             data.forEach(d => {
               if (d["url"] === "") {
                 contentContainer.innerHTML = `

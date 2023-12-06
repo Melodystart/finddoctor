@@ -59,7 +59,7 @@
             if (d["review"] === "") {
               contentContainer.innerHTML = `
           <div class="content" style="color:#f76b8a;">搜尋不到資料</div>
-          <div class="from">搜尋關鍵字可嘗試增加醫院名稱，例如：王大明 臺北榮民總醫院</div>`
+          <div class="from">搜尋關鍵字可嘗試增加醫院名稱，例如：<span style="box-shadow: 0 1px;">王大明 &nbsp;臺北榮民總醫院</span></div>`
             } else {
               const content = document.createElement("div");
               content.classList.add("content");
