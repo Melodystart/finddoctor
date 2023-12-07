@@ -74,10 +74,6 @@ def thankPDF(title, url):
 
     for r in result:
         # 感謝函月份、感謝對象、感謝內容
-        # cursor.execute(
-        #     "INSERT INTO thank (month, target, content) VALUES (%s, %s,%s)", (title, r[0], r[1]))
-        # con.commit()
-
         res = es.index(index="thank", document={
             "month": title,
             "target": r[0],
@@ -108,9 +104,6 @@ def thankWEB(title, url):
                     content += sentence.strip()
                 if target != "摘要":
                     # 感謝函月份、感謝對象、感謝內容
-                    # cursor.execute(
-                    #     "INSERT INTO thank (month, target, content) VALUES (%s, %s,%s)", (title, target, content))
-                    # con.commit()
                     res = es.index(index="thank", document={
                         "month": title,
                         "target": target,
@@ -145,47 +138,59 @@ def thankWEB(title, url):
         print(title, url)
 
 
-url = "https://www.vghtpe.gov.tw/Fpage.action?muid=6231"
+def crawlerletter():
+    try:
+        es.indices.create(index="thank",
+                          body={"settings": {
+                              "index": {"number_of_replicas": 0}}})
 
-with urllib.request.urlopen(url) as response:
-    html = response.read().decode("utf-8")
-soup = BeautifulSoup(html, "html.parser")
+        es.indices.create(index="thankurl",
+                          body={"settings": {
+                              "index": {"number_of_replicas": 0}}})
+    except:
+        pass
 
-result = soup.find_all('td')
+    url = "https://www.vghtpe.gov.tw/Fpage.action?muid=6231"
 
-for td in result:
-    item = td.find_all('a')
-    if len(item) != 0:
-        title = item[0].find('span').text
-        url = item[0].get("href")
+    with urllib.request.urlopen(url) as response:
+        html = response.read().decode("utf-8")
+    soup = BeautifulSoup(html, "html.parser")
 
-        # 確認感謝函月份是否已存於資料庫
-        # cursor.execute(
-        #     "SELECT month FROM thankUrl WHERE month=%s;", (title,))
-        # data = cursor.fetchone()
+    result = soup.find_all('td')
 
-        # res = es.search(index='thankUrl', query={
-        #     "match": {
-        #         "month": title
-        #     }
-        # })
-        # print(res['hits']['hits'])
-        # data = len(res)
-        # if data == 0:
+    for td in result:
+        item = td.find_all('a')
+        if len(item) != 0:
+            title = item[0].find('span').text
+            url = item[0].get("href")
 
-        if "../" in url:
-            url = "https://www.vghtpe.gov.tw/" + url.replace("../", "")
-            thankPDF(title, url)
-        elif ".pdf" in url:
-            thankPDF(title, url)
-        else:
-            thankWEB(title, url)
+            # 確認感謝函月份是否已存於資料庫
+            res = es.search(index='thankurl', query={
+                "match_phrase": {
+                    "month": title
+                }
+            })
 
-        # 感謝函名稱、URL存放於資料庫
-        res = es.index(index="thankurl", document={
-            "month": title,
-            "url": url,
-        })
+            try:
+                print(res['hits']['hits'])
+                print(res['hits']['hits'][0]['_source']['month'])
+            except:
+                pass
 
-        # else:
-        #     break
+            if len(res['hits']['hits']) == 0:
+
+                if "../" in url:
+                    url = "https://www.vghtpe.gov.tw/" + url.replace("../", "")
+                    thankPDF(title, url)
+                elif ".pdf" in url:
+                    thankPDF(title, url)
+                else:
+                    thankWEB(title, url)
+
+                # 感謝函名稱、URL存放於資料庫
+                res = es.index(index="thankurl", document={
+                    "month": title,
+                    "url": url,
+                })
+            else:
+                break

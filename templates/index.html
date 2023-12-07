@@ -118,7 +118,7 @@
       } else {
         search = document.querySelector(".doctor").value
       }
-      const url = '/api/' + search
+      const url = '/api/all/' + search
       fetch(url, { method: 'get' })
       return window.location.href = "/thank?search=" + search + "&department=" + department
     })
@@ -132,7 +132,7 @@
         } else {
           search = document.querySelector(".doctor").value
         }
-        const url = '/api/' + search
+        const url = '/api/all/' + search
         fetch(url, { method: 'get' })
         return window.location.href = "/thank?search=" + search + "&department=" + department
       }
