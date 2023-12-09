@@ -132,17 +132,6 @@
       .catch(error => console.error("Error:", error))
   }
 
-  function getsearch() {
-    if (document.querySelector(".doctor").value === "") {
-      search = document.querySelector("#district_box").value;
-      department = document.querySelector("#county_box").value;
-    } else {
-      search = document.querySelector(".doctor").value;
-      department = "";
-    }
-    return search
-  }
-
   getMost();
   getDoctor();
 

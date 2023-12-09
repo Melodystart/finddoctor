@@ -1,4 +1,3 @@
-from table import *
 from function import *
 from elastic import *
 import time
@@ -11,8 +10,6 @@ app = Flask(
     static_url_path="/"
 )
 
-getDoctorList()
-getPttBoard()
 crawlerletter()
 
 
