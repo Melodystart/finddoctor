@@ -1,3 +1,4 @@
+from table import *
 from function import *
 from elastic import *
 import time
@@ -10,6 +11,8 @@ app = Flask(
     static_url_path="/"
 )
 
+getDoctorList()
+getPttBoard()
 crawlerletter()
 
 
@@ -153,8 +156,14 @@ scheduler = BackgroundScheduler(timezone="Asia/Taipei")
 scheduler.add_job(updatedata, 'cron',
                   day_of_week="mon-sun", hour=0, minute=00)
 
+scheduler.add_job(getDoctorList, 'cron',
+                  day_of_week="wed", hour=0, minute=00)
+
+scheduler.add_job(getPttBoard, 'cron',
+                  day_of_week="wed", hour=0, minute=10)
+
 scheduler.add_job(crawlerletter, 'cron',
-                  day_of_week="sun", hour=0, minute=00)
+                  day_of_week="wed", hour=1, minute=00)
 
 # 3. 排程開始
 scheduler.start()
