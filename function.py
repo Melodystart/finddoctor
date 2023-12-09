@@ -689,36 +689,38 @@ def Blog(inputtext, T1, expiredDay):
         API_KEY = get_key(".env", "API_KEY")
         SEARCH_ENGINE_ID_BLOG = get_key(".env", "SEARCH_ENGINE_ID_BLOG")
         page = 1
+        while page < 3:
+            start = (page - 1) * 10 + 1
+            url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_BLOG}&q={query}&start={start}"
+            data = requests.get(url).json()
+            filters = get_key(".env", "filters").split(",")
+            try:
+                for i in range(len(data["items"])):
+                    if any(filter in data["items"][i]["title"] for filter in filters):
+                        print(data["items"][i]["title"])
+                    else:
+                        if keyword in data["items"][i]["title"] or keyword in data["items"][i]["snippet"]:
 
-        start = (page - 1) * 10 + 1
-        url = f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID_BLOG}&q={query}&start={start}"
+                            link = data["items"][i]["link"]
+                            title = data["items"][i]["title"]
+                            text = data["items"][i]["snippet"]
 
-        data = requests.get(url).json()
-        try:
-            for i in range(len(data["items"])):
-                if "580913" not in data["items"][i]["title"]:
-                    if keyword in data["items"][i]["title"] or keyword in data["items"][i]["snippet"]:
+                            item = {}
+                            item["url"] = link
+                            item["title"] = title
+                            item["text"] = text
+                            result["data"].append(item)
 
-                        link = data["items"][i]["link"]
-                        title = data["items"][i]["title"]
-                        text = data["items"][i]["snippet"]
-
-                        item = {}
-                        item["url"] = link
-                        item["title"] = title
-                        item["text"] = text
-                        result["data"].append(item)
-
-                        con = conPool.get_connection()
-                        cursor = con.cursor()
-                        cursor.execute(
-                            "INSERT INTO blog (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (inputtext, link, title, text))
-                        con.commit()
-                        cursor.close()
-                        con.close()
-
-        except:
-            pass
+                            con = conPool.get_connection()
+                            cursor = con.cursor()
+                            cursor.execute(
+                                "INSERT INTO blog (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (inputtext, link, title, text))
+                            con.commit()
+                            cursor.close()
+                            con.close()
+                page += 1
+            except:
+                break
         T2 = time.perf_counter()
         print(keyword+"Blog好了："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
