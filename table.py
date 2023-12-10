@@ -63,7 +63,7 @@ def getDoctorList():
     url = "https://www6.vghtpe.gov.tw/reg/sectList.do?type=return"
 
     departmentList = getSoupDoctor(url).find_all('a')
-
+    doctorNameList = {}
     for i in range(len(departmentList)):
         if "opdTimetable" in departmentList[i].get("href"):
             url_1 = "https://www6.vghtpe.gov.tw/reg/" + \
@@ -71,7 +71,8 @@ def getDoctorList():
             url_2 = url_1.replace("page=1", "page=2")
             urlList = [url_1, url_2]
             department = departmentList[i].text
-            doctorNameList = []
+            if department not in doctorNameList.keys():
+                doctorNameList[department] = []
 
             for url in urlList:
                 doctorList = getSoupDoctor(url).find_all("a")
@@ -81,8 +82,8 @@ def getDoctorList():
                         url = getUrl(doctorList[i].get("href"))
                         doctor = doctorList[i].text.strip()
 
-                        if (doctor not in doctorNameList) & len(doctor) > 0:
-                            doctorNameList.append(doctor)
+                        if (doctor not in doctorNameList[department]) & len(doctor) > 0:
+                            doctorNameList[department].append(doctor)
                             cursor.execute(
                                 "INSERT INTO doctor (department, name, url) VALUES (%s, %s,%s)", (department, doctor, url))
                             con.commit()
@@ -126,8 +127,8 @@ def getPttBoard():
         con.commit()
 
 
-getDoctorList()
 getPttBoard()
+getDoctorList()
 
 cursor.close()
 con.close()

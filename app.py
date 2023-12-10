@@ -153,10 +153,10 @@ scheduler = BackgroundScheduler(timezone="Asia/Taipei")
 scheduler.add_job(updatedata, 'cron',
                   day_of_week="mon-sun", hour=0, minute=00)
 
-scheduler.add_job(getDoctorList, 'cron',
+scheduler.add_job(getPttBoard, 'cron',
                   day_of_week="wed", hour=0, minute=00)
 
-scheduler.add_job(getPttBoard, 'cron',
+scheduler.add_job(getDoctorList, 'cron',
                   day_of_week="wed", hour=0, minute=10)
 
 scheduler.add_job(crawlerletter, 'cron',

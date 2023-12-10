@@ -97,13 +97,16 @@ def Review(inputtext, T1, expiredDay):
                     item["link"] = review_link
                     result["data"].append(item)
 
-                    con = conPool.get_connection()
-                    cursor = con.cursor()
-                    cursor.execute(
-                        "INSERT INTO review (doctor, author, star, timestamp, review, link, location ) VALUES (%s, %s,%s, %s, %s,%s,%s)", (inputtext, author, review_rating, review_timestamp, review, review_link, location))
-                    con.commit()
-                    cursor.close()
-                    con.close()
+                    try:
+                        con = conPool.get_connection()
+                        cursor = con.cursor()
+                        cursor.execute(
+                            "INSERT INTO review (doctor, author, star, timestamp, review, link, location ) VALUES (%s, %s,%s, %s, %s,%s,%s)", (inputtext, author, review_rating, review_timestamp, review, review_link, location))
+                        con.commit()
+                        cursor.close()
+                        con.close()
+                    except:
+                        pass
 
                 T4 = time.perf_counter()
 
@@ -124,13 +127,16 @@ def Review(inputtext, T1, expiredDay):
     result = {}
     result["data"] = []
 
-    con = conPool.get_connection()
-    cursor = con.cursor()
-    cursor.execute(
-        "SELECT author, star, timestamp, review, link, location FROM review WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
-    data = cursor.fetchall()
-    cursor.close()
-    con.close()
+    try:
+        con = conPool.get_connection()
+        cursor = con.cursor()
+        cursor.execute(
+            "SELECT author, star, timestamp, review, link, location FROM review WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
+        data = cursor.fetchall()
+        cursor.close()
+        con.close()
+    except:
+        pass
 
     if len(data) != 0:
         for d in data:
@@ -187,17 +193,20 @@ def Review(inputtext, T1, expiredDay):
             print(keyword+"review有錯誤")
             pass
 
-        con = conPool.get_connection()
-        cursor = con.cursor()
-        cursor.execute(
-            "SELECT * FROM review WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
-        data = cursor.fetchall()
-        if len(data) == 0:
+        try:
+            con = conPool.get_connection()
+            cursor = con.cursor()
             cursor.execute(
-                "INSERT INTO review (doctor, review) VALUES (%s, %s)", (inputtext, ""))
-            con.commit()
-        cursor.close()
-        con.close()
+                "SELECT * FROM review WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
+            data = cursor.fetchall()
+            if len(data) == 0:
+                cursor.execute(
+                    "INSERT INTO review (doctor, review) VALUES (%s, %s)", (inputtext, ""))
+                con.commit()
+            cursor.close()
+            con.close()
+        except:
+            pass
 
         T5 = time.perf_counter()
         print(keyword+"review好了："+'%s毫秒' % ((T5 - T1)*1000))
@@ -213,15 +222,16 @@ def Business(inputtext, T1, expiredDay):
     result = {}
     result["data"] = []
 
-    con = conPool.get_connection()
-    cursor = con.cursor(buffered=True)
-
-    cursor.execute(
-        "SELECT author, timestamp, comment, createdAt, link, location FROM businessComment WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
-    data = cursor.fetchall()
-
-    cursor.close()
-    con.close()
+    try:
+        con = conPool.get_connection()
+        cursor = con.cursor(buffered=True)
+        cursor.execute(
+            "SELECT author, timestamp, comment, createdAt, link, location FROM businessComment WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
+        data = cursor.fetchall()
+        cursor.close()
+        con.close()
+    except:
+        pass
 
     if len(data) != 0:
         for d in data:
@@ -277,17 +287,20 @@ def Business(inputtext, T1, expiredDay):
                         item["location"] = location
                         result["data"].append(item)
 
-                        con = conPool.get_connection()
-                        cursor = con.cursor()
-                        cursor.execute(
-                            "INSERT INTO businessComment (doctor, author, timestamp, comment, link, location) VALUES (%s, %s,%s, %s,%s, %s)", (inputtext, author, timestamp, comment, link, location))
-                        con.commit()
-                        cursor.close()
-                        con.close()
+                        try:
+                            con = conPool.get_connection()
+                            cursor = con.cursor()
+                            cursor.execute(
+                                "INSERT INTO businessComment (doctor, author, timestamp, comment, link, location) VALUES (%s, %s,%s, %s,%s, %s)", (inputtext, author, timestamp, comment, link, location))
+                            con.commit()
+                            cursor.close()
+                            con.close()
+                        except:
+                            pass
                 else:
                     pass
         except:
-            print(inputtext+"有錯誤，商周找不到資料")
+            pass
         T2 = time.perf_counter()
         print(inputtext+"商周好了："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
@@ -298,13 +311,16 @@ def Judgment(inputtext, T1, expiredDay):
     result = {}
     result["data"] = []
 
-    con = conPool.get_connection()
-    cursor = con.cursor()
-    cursor.execute(
-        "SELECT link, title FROM judgment WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
-    data = cursor.fetchall()
-    cursor.close()
-    con.close()
+    try:
+        con = conPool.get_connection()
+        cursor = con.cursor()
+        cursor.execute(
+            "SELECT link, title FROM judgment WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
+        data = cursor.fetchall()
+        cursor.close()
+        con.close()
+    except:
+        pass
 
     if len(data) != 0:
         for d in data:
@@ -362,13 +378,16 @@ def Judgment(inputtext, T1, expiredDay):
                 time.sleep(1)
                 links = driver.find_elements(By.CLASS_NAME, 'hlTitle_scroll')
                 if len(links) == 0:
-                    con = conPool.get_connection()
-                    cursor = con.cursor()
-                    cursor.execute(
-                        "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (inputtext, "", "搜尋不到資料：關鍵字可嘗試僅輸入醫生名稱，例如：王大明"))
-                    con.commit()
-                    cursor.close()
-                    con.close()
+                    try:
+                        con = conPool.get_connection()
+                        cursor = con.cursor()
+                        cursor.execute(
+                            "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (inputtext, "", "搜尋不到資料：關鍵字可嘗試僅輸入醫生名稱，例如：王大明"))
+                        con.commit()
+                        cursor.close()
+                        con.close()
+                    except:
+                        pass
                 else:
                     for l in links:
                         link = l.get_attribute("href")
@@ -379,19 +398,20 @@ def Judgment(inputtext, T1, expiredDay):
                         item["title"] = title
                         result["data"].append(item)
 
-                        con = conPool.get_connection()
-                        cursor = con.cursor()
-                        cursor.execute(
-                            "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (inputtext, link, title))
-                        con.commit()
-                        cursor.close()
-                        con.close()
-
-                # driver.quit()
+                        try:
+                            con = conPool.get_connection()
+                            cursor = con.cursor()
+                            cursor.execute(
+                                "INSERT INTO judgment (doctor, link, title) VALUES (%s, %s,%s)", (inputtext, link, title))
+                            con.commit()
+                            cursor.close()
+                            con.close()
+                        except:
+                            pass
             except:
                 print(keyword+"：司法院資料異常")
-                # driver.quit()
             driver.close()
+
             selenium_counts -= 1
             print(keyword+"：爬蟲結束，剩下"+str(selenium_counts)+"個爬蟲")
             T2 = time.perf_counter()
@@ -440,16 +460,19 @@ def Ptt(inputtext, T1, expiredDay):
     result = {}
     result["data"] = []
 
-    con = conPool.get_connection()
-    cursor = con.cursor()
-    cursor.execute(
-        "SELECT link, title, text FROM Ptt WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
-    data = cursor.fetchall()
-    cursor.execute(
-        "SELECT board FROM PttBoard;")
-    data_board = cursor.fetchall()
-    cursor.close()
-    con.close()
+    try:
+        con = conPool.get_connection()
+        cursor = con.cursor()
+        cursor.execute(
+            "SELECT link, title, text FROM Ptt WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
+        data = cursor.fetchall()
+        cursor.execute(
+            "SELECT board FROM PttBoard;")
+        data_board = cursor.fetchall()
+        cursor.close()
+        con.close()
+    except:
+        pass
 
     boards = ["Nurse", "BabyMother", "GoodPregnan", "Laser_eye",
               "hair_loss", "facelift", "teeth_salon", "KIDs", "Preschooler"]
@@ -500,13 +523,16 @@ def Ptt(inputtext, T1, expiredDay):
                                 item["text"] = text
                                 result["data"].append(item)
 
-                                con = conPool.get_connection()
-                                cursor = con.cursor()
-                                cursor.execute(
-                                    "INSERT INTO Ptt (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (inputtext, link, title, text))
-                                con.commit()
-                                cursor.close()
-                                con.close()
+                                try:
+                                    con = conPool.get_connection()
+                                    cursor = con.cursor()
+                                    cursor.execute(
+                                        "INSERT INTO Ptt (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (inputtext, link, title, text))
+                                    con.commit()
+                                    cursor.close()
+                                    con.close()
+                                except:
+                                    pass
 
                 page += 1
             except:
@@ -521,13 +547,16 @@ def Search(inputtext, T1, expiredDay):
     result = {}
     result["data"] = []
 
-    con = conPool.get_connection()
-    cursor = con.cursor()
-    cursor.execute(
-        "SELECT link, title, text FROM search WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
-    data = cursor.fetchall()
-    cursor.close()
-    con.close()
+    try:
+        con = conPool.get_connection()
+        cursor = con.cursor()
+        cursor.execute(
+            "SELECT link, title, text FROM search WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
+        data = cursor.fetchall()
+        cursor.close()
+        con.close()
+    except:
+        pass
 
     if len(data) != 0:
         for d in data:
@@ -570,13 +599,16 @@ def Search(inputtext, T1, expiredDay):
                     item["text"] = text
                     result["data"].append(item)
 
-                    con = conPool.get_connection()
-                    cursor = con.cursor()
-                    cursor.execute(
-                        "INSERT INTO search (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (inputtext, link, title, text))
-                    con.commit()
-                    cursor.close()
-                    con.close()
+                    try:
+                        con = conPool.get_connection()
+                        cursor = con.cursor()
+                        cursor.execute(
+                            "INSERT INTO search (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (inputtext, link, title, text))
+                        con.commit()
+                        cursor.close()
+                        con.close()
+                    except:
+                        pass
         except:
             pass
 
@@ -589,13 +621,16 @@ def Dcard(inputtext, T1, expiredDay):
     result = {}
     result["data"] = []
 
-    con = conPool.get_connection()
-    cursor = con.cursor()
-    cursor.execute(
-        "SELECT link, title, text FROM Dcard WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
-    data = cursor.fetchall()
-    cursor.close()
-    con.close()
+    try:
+        con = conPool.get_connection()
+        cursor = con.cursor()
+        cursor.execute(
+            "SELECT link, title, text FROM Dcard WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
+        data = cursor.fetchall()
+        cursor.close()
+        con.close()
+    except:
+        pass
 
     if len(data) != 0:
         for d in data:
@@ -638,13 +673,16 @@ def Dcard(inputtext, T1, expiredDay):
                         item["text"] = text
                         result["data"].append(item)
 
-                        con = conPool.get_connection()
-                        cursor = con.cursor()
-                        cursor.execute(
-                            "INSERT INTO Dcard (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (inputtext, link, title, text))
-                        con.commit()
-                        cursor.close()
-                        con.close()
+                        try:
+                            con = conPool.get_connection()
+                            cursor = con.cursor()
+                            cursor.execute(
+                                "INSERT INTO Dcard (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (inputtext, link, title, text))
+                            con.commit()
+                            cursor.close()
+                            con.close()
+                        except:
+                            pass
 
                 page += 1
             except:
@@ -659,13 +697,16 @@ def Blog(inputtext, T1, expiredDay):
     result = {}
     result["data"] = []
 
-    con = conPool.get_connection()
-    cursor = con.cursor()
-    cursor.execute(
-        "SELECT link, title, text FROM blog WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
-    data = cursor.fetchall()
-    cursor.close()
-    con.close()
+    try:
+        con = conPool.get_connection()
+        cursor = con.cursor()
+        cursor.execute(
+            "SELECT link, title, text FROM blog WHERE doctor=%s AND createdAt>%s;", (inputtext, expiredDay))
+        data = cursor.fetchall()
+        cursor.close()
+        con.close()
+    except:
+        pass
 
     if len(data) != 0:
         for d in data:
@@ -711,13 +752,16 @@ def Blog(inputtext, T1, expiredDay):
                             item["text"] = text
                             result["data"].append(item)
 
-                            con = conPool.get_connection()
-                            cursor = con.cursor()
-                            cursor.execute(
-                                "INSERT INTO blog (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (inputtext, link, title, text))
-                            con.commit()
-                            cursor.close()
-                            con.close()
+                            try:
+                                con = conPool.get_connection()
+                                cursor = con.cursor()
+                                cursor.execute(
+                                    "INSERT INTO blog (doctor, link, title, text) VALUES (%s, %s,%s,%s)", (inputtext, link, title, text))
+                                con.commit()
+                                cursor.close()
+                                con.close()
+                            except:
+                                pass
                 page += 1
             except:
                 break
@@ -842,7 +886,7 @@ def getDoctorList():
     url = "https://www6.vghtpe.gov.tw/reg/sectList.do?type=return"
 
     departmentList = getSoupDoctor(url).find_all('a')
-
+    doctorNameList = {}
     for i in range(len(departmentList)):
         if "opdTimetable" in departmentList[i].get("href"):
             url_1 = "https://www6.vghtpe.gov.tw/reg/" + \
@@ -850,7 +894,8 @@ def getDoctorList():
             url_2 = url_1.replace("page=1", "page=2")
             urlList = [url_1, url_2]
             department = departmentList[i].text
-            doctorNameList = []
+            if department not in doctorNameList.keys():
+                doctorNameList[department] = []
 
             for url in urlList:
                 doctorList = getSoupDoctor(url).find_all("a")
@@ -860,8 +905,8 @@ def getDoctorList():
                         url = getUrl(doctorList[i].get("href"))
                         doctor = doctorList[i].text.strip()
 
-                        if (doctor not in doctorNameList) & len(doctor) > 0:
-                            doctorNameList.append(doctor)
+                        if (doctor not in doctorNameList[department]) & len(doctor) > 0:
+                            doctorNameList[department].append(doctor)
                             cursor.execute(
                                 "INSERT INTO doctor (department, name, url) VALUES (%s, %s,%s)", (department, doctor, url))
                             con.commit()
