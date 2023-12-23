@@ -1,18 +1,19 @@
 # FindDoctor
-> FindDoctor is the website for searching doctor reviews.
+> FindDoctor 為蒐尋醫生評價網頁，希望能減少病患求醫焦慮、讓更多人看見好醫師。
 
 _**Link :**_ https://finddoctor.abinitio.fun/
 
-* Use **Selenium**、**BeautifulSoup**、**pdfplumber** and connect **Google Cloud API** to get data.
-* Apply **elasticsearch** and **RDS(MySQL)** as database.
-* Run **threads** to fetch different data simultaneously and utilize **cache** concepts to store/read data.
-* Deploy the web application with **Docker** on **EC2**.
-* Install an **SSL** Certificate on **NGINX**.
+使用說明：選擇臺北榮總科別及醫生選單或直接輸入醫生姓名後，可取得榮總感謝函、Blog、Ptt、Dcard、Google Review、良醫網及司法院資訊。
 
 ### Architecture
 ![][architecture]
 
 [architecture]:./readme/Architecture.jpg
+
+### Database
+![][database]
+
+[database]:./readme/database.jpg
 
 ### Demo
 ![][demo1]
