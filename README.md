@@ -3,7 +3,8 @@
 
 _**Link :**_ https://finddoctor.abinitio.fun/
 
-使用說明：選擇臺北榮總科別及醫生選單或直接輸入醫生姓名後，可取得榮總感謝函、Blog、Ptt、Dcard、Google Review、良醫網及司法院資訊。
+### How to use
+選擇臺北榮總科別/醫生選單或直接輸入醫生姓名後，可取得榮總感謝函、Blog、Ptt、Dcard、Google Review、良醫網及司法院資訊。
 
 ### Architecture
 ![][architecture]
