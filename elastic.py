@@ -32,8 +32,6 @@ def thankPDF(title, url):
             tables = page.extract_tables()[0]
         except:
             tables = page.extract_tables()
-            print("表格異常")
-            print(tables)
 
         for j in range(len(tables)):
             item = []
@@ -68,9 +66,7 @@ def thankPDF(title, url):
                 result[(len(result)-1)][1] += content
 
             else:
-                print("-----------資料異常，需另處理------------")
-                print(url)
-                print(tables[j])
+                pass
 
     for r in result:
         # 感謝函月份、感謝對象、感謝內容
@@ -119,23 +115,15 @@ def thankWEB(title, url):
                         content += sentence.strip()
                     if target != "摘要":
                         # 感謝函月份、感謝對象、感謝內容
-                        # cursor.execute(
-                        #     "INSERT INTO thank (month, target, content) VALUES (%s, %s,%s)", (title, target, content))
-                        # con.commit()
                         res = es.index(index="thank", document={
                             "month": title,
                             "target": target,
                             "content": content,
                         })
                 except:
-                    print("我是122")
-                    print(title)
-                    print("感謝對象"+target)
-                    print("感謝內容"+content)
-                    print(url)
+                    pass
     except:
-        print("我是128")
-        print(title, url)
+        pass
 
 
 def crawlerletter():

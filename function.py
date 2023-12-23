@@ -23,7 +23,7 @@ conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get
     ".env", "password"), host='finddoctor.collqfqpnilo.us-west-2.rds.amazonaws.com', database='finddoctor', pool_name='findConPool', pool_size=17,  auth_plugin='mysql_native_password')
 
 toDay = datetime.today().date()
-expiredDay = toDay - timedelta(days=7)  # 設定資料期限為7天
+expiredDay = toDay - timedelta(days=7)  # 設定快取資料期限為7天
 selenium_counts = 0
 
 
@@ -107,7 +107,6 @@ def Review(inputtext, T1, expiredDay):
                         con.close()
                     except:
                         pass
-
                 T4 = time.perf_counter()
 
             else:
@@ -151,11 +150,8 @@ def Review(inputtext, T1, expiredDay):
             item["link"] = d[4]
             item["location"] = d[5]
             result["data"].append(item)
-            print(keyword+"回傳先前review資料")
         return result
     else:
-        print(keyword+"開始連線reviewAPI")
-
         API_KEY = get_key(".env", "API_KEY")
 
         url = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=" + \
@@ -168,16 +164,11 @@ def Review(inputtext, T1, expiredDay):
                 if ("醫院" in data["results"][i]["name"]) or ("診所" in data["results"][i]["name"]):
                     places_dict[data["results"][i]["place_id"]
                                 ] = data["results"][i]["user_ratings_total"]
-            # print(places_dict)
-            # places_sort = dict(sorted(places_dict.items(),
-            #                           key=lambda x: x[1], reverse=True))
-            # print(places_sort)
             places = list(places_dict.keys())
             counts = len(places)
-            if counts > 1:  # 僅取前1個搜尋地點
+            if counts > 1: 
                 counts = 1
 
-            # 使用threading
             threads = []
 
             for i in range(counts):
@@ -190,7 +181,6 @@ def Review(inputtext, T1, expiredDay):
             for i in range(counts):
                 threads[i].join(timeout)
         except:
-            print(keyword+"review有錯誤")
             pass
 
         try:
@@ -209,7 +199,7 @@ def Review(inputtext, T1, expiredDay):
             pass
 
         T5 = time.perf_counter()
-        print(keyword+"review好了："+'%s毫秒' % ((T5 - T1)*1000))
+        print(keyword+"review："+'%s毫秒' % ((T5 - T1)*1000))
         return result, 200
 
 
@@ -302,7 +292,7 @@ def Business(inputtext, T1, expiredDay):
         except:
             pass
         T2 = time.perf_counter()
-        print(inputtext+"商周好了："+'%s毫秒' % ((T2 - T1)*1000))
+        print(inputtext+"商周："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 
@@ -332,7 +322,6 @@ def Judgment(inputtext, T1, expiredDay):
     else:
         if selenium_counts < 20:
             selenium_counts += 1
-            print("第"+str(selenium_counts)+"個爬蟲開始爬")
             service = Service(executable_path=ChromeDriverManager().install())
             options = Options()
             ua = UserAgent()
@@ -409,21 +398,20 @@ def Judgment(inputtext, T1, expiredDay):
                         except:
                             pass
             except:
-                print(keyword+"：司法院資料異常")
+                pass
             driver.close()
 
             selenium_counts -= 1
-            print(keyword+"：爬蟲結束，剩下"+str(selenium_counts)+"個爬蟲")
             T2 = time.perf_counter()
-            print(keyword+"司法院好了："+'%s毫秒' % ((T2 - T1)*1000))
+            print(keyword+"司法院："+'%s毫秒' % ((T2 - T1)*1000))
             return result, 200
         else:
-            print("因忙碌中，先不取司法院資料")
             result["busy"] = True
             return result, 200
 
 
 def Thank(keyword):
+    T1 = time.perf_counter()
     res = es.options(opaque_id=keyword.encode("utf-8").decode("latin1")).search(index='thank', body={"size": 100, "query": {
         "match_phrase": {
             "content": keyword
@@ -433,6 +421,8 @@ def Thank(keyword):
             "order": "desc"
         }
     }})
+    T2 = time.perf_counter()
+    print(keyword+"Elastic Search："+'%s毫秒' % ((T2 - T1)*1000))
     data = res['hits']['hits']
     return data
 
@@ -471,14 +461,12 @@ def Ptt(inputtext, T1, expiredDay):
         data_board = cursor.fetchall()
         cursor.close()
         con.close()
+        boards = ["Nurse", "BabyMother", "GoodPregnan", "Laser_eye",
+                  "hair_loss", "facelift", "teeth_salon", "KIDs", "Preschooler"]
+        for d in data_board:
+            boards.append(d[0])
     except:
         pass
-
-    boards = ["Nurse", "BabyMother", "GoodPregnan", "Laser_eye",
-              "hair_loss", "facelift", "teeth_salon", "KIDs", "Preschooler"]
-
-    for d in data_board:
-        boards.append(d[0])
 
     if len(data) != 0:
         for d in data:
@@ -539,7 +527,7 @@ def Ptt(inputtext, T1, expiredDay):
                 break
 
         T2 = time.perf_counter()
-        print(keyword+"Ptt好了："+'%s毫秒' % ((T2 - T1)*1000))
+        print(keyword+"Ptt："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 
@@ -613,7 +601,7 @@ def Search(inputtext, T1, expiredDay):
             pass
 
         T2 = time.perf_counter()
-        print(keyword+"Search好了："+'%s毫秒' % ((T2 - T1)*1000))
+        print(keyword+"Search："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 
@@ -689,7 +677,7 @@ def Dcard(inputtext, T1, expiredDay):
                 break
 
         T2 = time.perf_counter()
-        print(keyword+"Dcard好了："+'%s毫秒' % ((T2 - T1)*1000))
+        print(keyword+"Dcard："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 
@@ -766,7 +754,7 @@ def Blog(inputtext, T1, expiredDay):
             except:
                 break
         T2 = time.perf_counter()
-        print(keyword+"Blog好了："+'%s毫秒' % ((T2 - T1)*1000))
+        print(keyword+"Blog："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 
@@ -831,7 +819,7 @@ def getAll(inputtext):
     result = {}
     result["ok"] = True
     T2 = time.perf_counter()
-    print(inputtext+"全都好了："+'%s毫秒' % ((T2 - T1)*1000))
+    print(inputtext+"全部："+'%s毫秒' % ((T2 - T1)*1000))
     return result
 
 
