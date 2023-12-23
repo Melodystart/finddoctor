@@ -1,5 +1,5 @@
 # FindDoctor
-> FindDoctor 為蒐尋醫生評價網頁，希望能減少病患求醫焦慮、讓更多人看見好醫師。
+> FindDoctor 為蒐尋醫生評價網頁，希望能減少病患求醫焦慮、讓更多人看見好醫生。
 
 ### Link
 https://finddoctor.abinitio.fun/
