@@ -12,5 +12,5 @@ RUN apt-get update && apt-get -y install google-chrome-stable
 EXPOSE 8080
 EXPOSE 9200
 COPY start.sh .
-# CMD ["/bin/bash","-c","./start.sh"]
-ENTRYPOINT [ "/bin/bash", "-c", "./start.sh" ]
+RUN chmod +x ./start.sh
+CMD ["/bin/bash","-c","./start.sh"]
