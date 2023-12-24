@@ -10,6 +10,8 @@ on:
     branches: [ "main" ]
 
 permissions:
+  checks: write
+  pull-requests: write
   contents: read
 
 jobs:
@@ -31,9 +33,6 @@ jobs:
     - name: Test with pytest
       run: pytest function_test.py -v --junitxml="result.xml"
     - name: Publish Test Results
-      permissions:
-        checks: write
-        pull-requests: write
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
