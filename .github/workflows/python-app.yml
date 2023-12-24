@@ -63,5 +63,9 @@ jobs:
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} 
           '
-          cd /home/ubuntu/finddoctor 
+          cd /home/${{secrets.USER_NAME}}/finddoctor 
+          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/finddoctor
+          sudo docker run -d --name finddoctor --network host ${{ secrets.DOCKER_USERNAME }}/finddoctor
+          sudo docker cp .env ${{ secrets.DOCKER_USERNAME }}/finddoctor:/app/
+          sudo docker start ${{ secrets.DOCKER_USERNAME }}/finddoctor
           '
