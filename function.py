@@ -9,58 +9,22 @@ import requests
 import urllib.request
 from bs4 import BeautifulSoup
 from outscraper import ApiClient
-from datetime import datetime, timezone, timedelta
-from dateutil.relativedelta import relativedelta
+from datetime import datetime, timedelta
 from dotenv import get_key
 import time
+from mysql.connector import pooling
 import threading
 from elasticsearch import Elasticsearch
-from connection import conPool
+from function_test import *
 
 es = Elasticsearch("http://localhost:9200/")
+
+conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
+    ".env", "password"), host='finddoctor.collqfqpnilo.us-west-2.rds.amazonaws.com', database='finddoctor', pool_name='findConPool', pool_size=17,  auth_plugin='mysql_native_password')
 
 toDay = datetime.today().date()
 expiredDay = toDay - timedelta(days=7)  # 設定快取資料期限為7天
 selenium_counts = 0
-
-
-def getUrl(words):
-    first = words.index("'")+1
-    end = words.index("'", first)
-    return words[slice(first, end)]
-
-
-def untilNow(ts):
-    # 設定utc時區
-    past_utc = datetime.utcfromtimestamp(ts).replace(tzinfo=timezone.utc)
-    now_utc = datetime.now(tz=timezone.utc)
-
-    # 設定utc+8時區
-    # utf8 = timezone(timedelta(hours=8))
-    # past_utc8 = past_utc.astimezone(utf8)
-    # now_utc8 = now_utc.astimezone(utf8)
-
-    until_now = relativedelta(now_utc, past_utc)
-
-    years = until_now.years
-    months = until_now.months
-    days = until_now.days
-    hours = until_now.hours
-    minutes = until_now.minutes
-
-    if years == 0:
-        if months == 0:
-            if days == 0:
-                if hours == 0:
-                    return (str(minutes) + "分鐘前")
-                else:
-                    return (str(hours) + "小時前")
-            else:
-                return (str(days) + "天前")
-        else:
-            return (str(months) + "個月前")
-    else:
-        return (str(years) + "年前")
 
 
 def error(result, message):

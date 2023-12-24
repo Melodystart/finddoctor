@@ -1,6 +1,44 @@
-from function import getUrl
-from function import untilNow
 import time
+from dateutil.relativedelta import relativedelta
+from datetime import datetime, timezone
+
+def getUrl(words):
+    first = words.index("'")+1
+    end = words.index("'", first)
+    return words[slice(first, end)]
+
+
+def untilNow(ts):
+    # 設定utc時區
+    past_utc = datetime.utcfromtimestamp(ts).replace(tzinfo=timezone.utc)
+    now_utc = datetime.now(tz=timezone.utc)
+
+    # 設定utc+8時區
+    # utf8 = timezone(timedelta(hours=8))
+    # past_utc8 = past_utc.astimezone(utf8)
+    # now_utc8 = now_utc.astimezone(utf8)
+
+    until_now = relativedelta(now_utc, past_utc)
+
+    years = until_now.years
+    months = until_now.months
+    days = until_now.days
+    hours = until_now.hours
+    minutes = until_now.minutes
+
+    if years == 0:
+        if months == 0:
+            if days == 0:
+                if hours == 0:
+                    return (str(minutes) + "分鐘前")
+                else:
+                    return (str(hours) + "小時前")
+            else:
+                return (str(days) + "天前")
+        else:
+            return (str(months) + "個月前")
+    else:
+        return (str(years) + "年前")
 
 
 def test_getUrl():
