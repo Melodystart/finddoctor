@@ -13,14 +13,11 @@ from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 from dotenv import get_key
 import time
-from mysql.connector import pooling
 import threading
 from elasticsearch import Elasticsearch
+from connection import conPool
 
 es = Elasticsearch("http://localhost:9200/")
-
-conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
-    ".env", "password"), host='finddoctor.collqfqpnilo.us-west-2.rds.amazonaws.com', database='finddoctor', pool_name='findConPool', pool_size=17,  auth_plugin='mysql_native_password')
 
 toDay = datetime.today().date()
 expiredDay = toDay - timedelta(days=7)  # 設定快取資料期限為7天
