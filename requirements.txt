@@ -10,3 +10,4 @@ python-dateutil
 APScheduler
 fake_useragent
 webdriver-manager
+pytest

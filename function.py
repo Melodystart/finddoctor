@@ -27,10 +27,10 @@ expiredDay = toDay - timedelta(days=7)  # 設定快取資料期限為7天
 selenium_counts = 0
 
 
-def error(result, message):
-    result["error"] = True
-    result["message"] = message
-    return result
+def getUrl(words):
+    first = words.index("'")+1
+    end = words.index("'", first)
+    return words[slice(first, end)]
 
 
 def untilNow(ts):
@@ -64,6 +64,12 @@ def untilNow(ts):
             return (str(months) + "個月前")
     else:
         return (str(years) + "年前")
+
+
+def error(result, message):
+    result["error"] = True
+    result["message"] = message
+    return result
 
 
 def Review(inputtext, T1, expiredDay):
@@ -166,7 +172,7 @@ def Review(inputtext, T1, expiredDay):
                                 ] = data["results"][i]["user_ratings_total"]
             places = list(places_dict.keys())
             counts = len(places)
-            if counts > 1: 
+            if counts > 1:
                 counts = 1
 
             threads = []
@@ -859,11 +865,6 @@ def getDoctorList():
         with urllib.request.urlopen(url) as response:
             html = response.read().decode("big5-hkscs")
             return BeautifulSoup(html, "html.parser")
-
-    def getUrl(words):
-        first = words.index("'")+1
-        end = words.index("'", first)
-        return words[slice(first, end)]
 
     con = conPool.get_connection()
     cursor = con.cursor()
