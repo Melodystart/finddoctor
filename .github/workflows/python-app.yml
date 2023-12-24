@@ -64,6 +64,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/finddoctor
           sudo docker run --env-file /home/${{secrets.USER_NAME}}/finddoctor/.env -d --name finddoctor --network host ${{ secrets.DOCKER_USERNAME }}/finddoctor
-          sudo docker cp .env ${{ secrets.DOCKER_USERNAME }}/finddoctor:/app/
-          sudo docker start ${{ secrets.DOCKER_USERNAME }}/finddoctor
+          sudo docker cp .env finddoctor:/app/
+          sudo docker start finddoctor
           '
