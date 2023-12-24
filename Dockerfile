@@ -13,4 +13,4 @@ EXPOSE 8080
 EXPOSE 9200
 COPY start.sh .
 # CMD ["/bin/bash","-c","./start.sh"]
-RUN ["chmod", "+x", "./start.sh"]
+ENTRYPOINT [ "bash", "-c", "./start.sh" ]
