@@ -31,11 +31,18 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+        
+    - name: Copy Test Results
+      if: always()
+      run: |
+        cp -Lpr /tmp/test-results test-results
+      shell: bash
+
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
         files: |
-          test-results/**/*.xml
-          test-results/**/*.trx
-          test-results/**/*.json
+            test-results/**/*.xml
+            test-results/**/*.trx
+            test-results/**/*.json
