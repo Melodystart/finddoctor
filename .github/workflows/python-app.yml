@@ -53,7 +53,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2 
-      - name: Build & Deploy
+      - name: Deploy
         env:
             PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
             HOSTNAME: ${{secrets.SSH_HOST}}
@@ -63,9 +63,8 @@ jobs:
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} 
           '
-          cd /home/${{secrets.USER_NAME}}/finddoctor 
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/finddoctor
-          sudo docker run -d --name finddoctor --network host ${{ secrets.DOCKER_USERNAME }}/finddoctor
+          sudo docker run --env-file /home/ubuntu/finddoctor/.env -d --name finddoctor --network host ${{ secrets.DOCKER_USERNAME }}/finddoctor
           sudo docker cp .env ${{ secrets.DOCKER_USERNAME }}/finddoctor:/app/
           sudo docker start ${{ secrets.DOCKER_USERNAME }}/finddoctor
           '
