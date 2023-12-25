@@ -17,6 +17,14 @@ https://finddoctor.abinitio.fun/
 
 [database]:./readme/database.jpg
 
+### CI/CD
+![][CICD]
+
+[CICD]:./readme/CICD.jpg
+
+### PyTest Report
+<img src="./readme/testresult.jpg" height="40%" width="40%" >
+
 ### Demo
 ![][demo1]
 

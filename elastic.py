@@ -159,12 +159,6 @@ def crawlerletter():
                 }
             })
 
-            try:
-                print(res['hits']['hits'])
-                print(res['hits']['hits'][0]['_source']['month'])
-            except:
-                pass
-
             if len(res['hits']['hits']) == 0:
 
                 if "../" in url:

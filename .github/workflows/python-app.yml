@@ -1,6 +1,3 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
 name: Python application
 
 on:
@@ -44,7 +41,7 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
     - name: Build Docker Image
       run: docker build . -t ${{ secrets.DOCKER_USERNAME }}/finddoctor
-    - name: Push Docker Image to Registry
+    - name: Push Docker Image to Docker Hub
       run: docker push ${{ secrets.DOCKER_USERNAME }}/finddoctor
 
   deploy:
@@ -53,7 +50,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2 
-      - name: Deploy
+      - name: Deploy Docker to EC2
         env:
             PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
             HOSTNAME: ${{secrets.SSH_HOST}}
@@ -62,6 +59,9 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
+          sudo docker stop finddoctor
+          sudo docker rm finddoctor
+          sudo docker rmi ${{ secrets.DOCKER_USERNAME }}/finddoctor
           cd /home/${{secrets.USER_NAME}}/finddoctor 
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/finddoctor
           sudo docker run -d --name finddoctor --network host ${{ secrets.DOCKER_USERNAME }}/finddoctor
