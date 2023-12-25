@@ -23,7 +23,7 @@ https://finddoctor.abinitio.fun/
 [CICD]:./readme/CICD.jpg
 
 ### PyTest Report
-<img src="./readme/testresult.jpg" height="40%" width="40%" >
+<img src="./readme/testresult.jpg" height="30%" width="30%" >
 
 ### Demo
 ![][demo1]
