@@ -1,6 +1,10 @@
 # FindDoctor
 > FindDoctor 為蒐尋醫生評價網頁，希望能減少病患求醫焦慮、讓更多人看見好醫生。
-
+- Set up a CI/CD pipeline with GitHub Actions, which runs unit test with PyTest and deploys with Docker.
+- Apply Elasticsearch and RDS(MySQL) as database and update data in database every week with APScheduler.
+- Use NGINX as reverse proxy and secure connections with SSL Certificate.
+- Use Selenium、BeautifulSoup、Pdfplumber and connect Google Cloud API to get data.
+- Run threads to fetch different data simultaneously and utilize cache concepts to store/read data.
 ### Link
 https://finddoctor.abinitio.fun/
 
