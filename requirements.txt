@@ -11,3 +11,4 @@ APScheduler
 fake_useragent
 webdriver-manager
 pytest
+redis

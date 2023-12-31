@@ -16,11 +16,18 @@ from mysql.connector import pooling
 import threading
 from elasticsearch import Elasticsearch
 from function_test import *
+import redis
+import json
+pool = redis.BlockingConnectionPool(timeout=10,host='localhost', port=6379, max_connections=40, decode_responses=True)
+r = redis.Redis(connection_pool=pool)
 
 es = Elasticsearch("http://localhost:9200/")
 
+# conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
+#     ".env", "password"), host='finddoctor.collqfqpnilo.us-west-2.rds.amazonaws.com', database='finddoctor', pool_name='findConPool', pool_size=17,  auth_plugin='mysql_native_password')
+
 conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
-    ".env", "password"), host='finddoctor.collqfqpnilo.us-west-2.rds.amazonaws.com', database='finddoctor', pool_name='findConPool', pool_size=17,  auth_plugin='mysql_native_password')
+    ".env", "password"), host='localhost', database='finddoctor', pool_name='findConPool', pool_size=17,  auth_plugin='mysql_native_password')
 
 toDay = datetime.today().date()
 expiredDay = toDay - timedelta(days=7)  # 設定快取資料期限為7天
@@ -33,7 +40,7 @@ def error(result, message):
     return result
 
 
-def Review(inputtext, T1, expiredDay):
+def Review(inputtext, expiredDay):
     def callReviewAPI(place_id, keyword, result):
         api_client = ApiClient(
             api_key=get_key(".env", "review_api_key"))
@@ -117,6 +124,8 @@ def Review(inputtext, T1, expiredDay):
             item["link"] = d[4]
             item["location"] = d[5]
             result["data"].append(item)
+            r.rpush("Review-"+inputtext,json.dumps(item))
+        r.expire("Review-"+inputtext, time=60*60*24*7)
         return result
     else:
         API_KEY = get_key(".env", "API_KEY")
@@ -164,13 +173,10 @@ def Review(inputtext, T1, expiredDay):
             con.close()
         except:
             pass
-
-        T5 = time.perf_counter()
-        print(keyword+"review："+'%s毫秒' % ((T5 - T1)*1000))
         return result, 200
 
 
-def Business(inputtext, T1, expiredDay):
+def Business(inputtext, expiredDay):
     API_KEY = get_key(".env", "API_KEY")
     SEARCH_ENGINE_ID_BUSINESS = get_key(".env", "SEARCH_ENGINE_ID_BUSINESS")
 
@@ -200,6 +206,8 @@ def Business(inputtext, T1, expiredDay):
             item["link"] = d[4]
             item["location"] = d[5]
             result["data"].append(item)
+            r.rpush("Business-"+inputtext,json.dumps(item, default=str))
+        r.expire("Business-"+inputtext, time=60*60*24*7)
         return result
     else:
         start = (page - 1) * 10 + 1
@@ -258,12 +266,10 @@ def Business(inputtext, T1, expiredDay):
                     pass
         except:
             pass
-        T2 = time.perf_counter()
-        print(inputtext+"商周："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 
-def Judgment(inputtext, T1, expiredDay):
+def Judgment(inputtext, expiredDay):
     global selenium_counts
     result = {}
     result["data"] = []
@@ -285,6 +291,8 @@ def Judgment(inputtext, T1, expiredDay):
             item["url"] = d[0]
             item["title"] = d[1]
             result["data"].append(item)
+            r.rpush("Judgment-"+inputtext,json.dumps(item, default=str))
+        r.expire("Judgment-"+inputtext, time=60*60*24*7)
         return result
     else:
         if selenium_counts < 20:
@@ -305,7 +313,6 @@ def Judgment(inputtext, T1, expiredDay):
             options.add_argument('--disable-infobars')
             options.add_argument('enable-features=NetworkServiceInProcess')
             options.add_argument('--disable-dev-shm-usage')
-
             options.add_experimental_option("detach", True)  # 加入後不會閃退
             options.page_load_strategy = 'normal'
             driver = webdriver.Chrome(service=service, options=options)
@@ -369,8 +376,6 @@ def Judgment(inputtext, T1, expiredDay):
             driver.close()
 
             selenium_counts -= 1
-            T2 = time.perf_counter()
-            print(keyword+"司法院："+'%s毫秒' % ((T2 - T1)*1000))
             return result, 200
         else:
             result["busy"] = True
@@ -394,7 +399,7 @@ def Thank(keyword):
     return data
 
 
-def viewThank(data):
+def viewThank(data,inputtext):
     result = {}
     result["data"] = []
     for d in data:
@@ -410,10 +415,12 @@ def viewThank(data):
         item["text"] = d['_source']['content']
         item["when"] = d['_source']['month']
         result["data"].append(item)
+        r.rpush("Thank-"+inputtext,json.dumps(item))
+    r.expire("Thank-"+inputtext, time=60*60*24*7)
     return result
 
 
-def Ptt(inputtext, T1, expiredDay):
+def Ptt(inputtext, expiredDay):
     result = {}
     result["data"] = []
 
@@ -442,6 +449,8 @@ def Ptt(inputtext, T1, expiredDay):
             item["title"] = d[1]
             item["text"] = d[2]
             result["data"].append(item)
+            r.rpush("Ptt-"+inputtext,json.dumps(item))
+        r.expire("Ptt-"+inputtext, time=60*60*24*7)
         return result
     else:
         try:
@@ -492,13 +501,10 @@ def Ptt(inputtext, T1, expiredDay):
                 page += 1
             except:
                 break
-
-        T2 = time.perf_counter()
-        print(keyword+"Ptt："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 
-def Search(inputtext, T1, expiredDay):
+def Search(inputtext, expiredDay):
     result = {}
     result["data"] = []
 
@@ -520,6 +526,8 @@ def Search(inputtext, T1, expiredDay):
             item["title"] = d[1]
             item["text"] = d[2]
             result["data"].append(item)
+            r.rpush("Search-"+inputtext,json.dumps(item))
+        r.expire("Search-"+inputtext, time=60*60*24*7)
         return result
     else:
         try:
@@ -566,13 +574,10 @@ def Search(inputtext, T1, expiredDay):
                         pass
         except:
             pass
-
-        T2 = time.perf_counter()
-        print(keyword+"Search："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 
-def Dcard(inputtext, T1, expiredDay):
+def Dcard(inputtext, expiredDay):
     result = {}
     result["data"] = []
 
@@ -594,6 +599,8 @@ def Dcard(inputtext, T1, expiredDay):
             item["title"] = d[1]
             item["text"] = d[2]
             result["data"].append(item)
+            r.rpush("Dcard-"+inputtext,json.dumps(item))
+        r.expire("Dcard-"+inputtext, time=60*60*24*7)
         return result
     else:
         try:
@@ -642,13 +649,10 @@ def Dcard(inputtext, T1, expiredDay):
                 page += 1
             except:
                 break
-
-        T2 = time.perf_counter()
-        print(keyword+"Dcard："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 
-def Blog(inputtext, T1, expiredDay):
+def Blog(inputtext, expiredDay):
     result = {}
     result["data"] = []
 
@@ -670,6 +674,8 @@ def Blog(inputtext, T1, expiredDay):
             item["title"] = d[1]
             item["text"] = d[2]
             result["data"].append(item)
+            r.rpush("Blog-"+inputtext,json.dumps(item))
+        r.expire("Blog-"+inputtext, time=60*60*24*7)
         return result
     else:
         try:
@@ -693,7 +699,7 @@ def Blog(inputtext, T1, expiredDay):
             try:
                 for i in range(len(data["items"])):
                     if any(filter in data["items"][i]["title"] for filter in filters):
-                        print(data["items"][i]["title"])
+                        pass
                     else:
                         if keyword in data["items"][i]["title"] or keyword in data["items"][i]["snippet"]:
 
@@ -720,8 +726,6 @@ def Blog(inputtext, T1, expiredDay):
                 page += 1
             except:
                 break
-        T2 = time.perf_counter()
-        print(keyword+"Blog："+'%s毫秒' % ((T2 - T1)*1000))
         return result, 200
 
 

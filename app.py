@@ -12,6 +12,12 @@ app = Flask(
 
 crawlerletter()
 
+def Redis(cache):
+    result={}
+    result["data"] = []
+    for item in cache:
+        result["data"].append(json.loads(item))
+    return result
 
 @app.route("/")
 def index():
@@ -81,59 +87,105 @@ def getMost(inputtext):
 @app.route("/api/thank/<inputtext>")
 def getthank(inputtext):
     T1 = time.perf_counter()
-    data = Thank(inputtext)
-    result = viewThank(data)
+    cache = r.lrange("Thank-"+inputtext,0,-1)
+    if len(cache) != 0:
+        result = Redis(cache)
+    else:
+        data = Thank(inputtext)
+        result = viewThank(data,inputtext)
     T2 = time.perf_counter()
-    print(inputtext+"感謝函好了："+'%s毫秒' % ((T2 - T1)*1000))
+    print(inputtext+"感謝函："+'%s毫秒' % ((T2 - T1)*1000))
     return result
 
 
 @app.route("/api/Ptt/<inputtext>")
 def getPtt(inputtext):
     T1 = time.perf_counter()
-    result = Ptt(inputtext, T1, expiredDay)
+    cache = r.lrange("Ptt-"+inputtext,0,-1)
+    if len(cache) != 0:
+        result = Redis(cache)
+    else:
+        result = Ptt(inputtext, expiredDay)
+    T2 = time.perf_counter()
+    print(inputtext+"Ptt："+'%s毫秒' % ((T2 - T1)*1000))
     return result
 
 
 @app.route("/api/Dcard/<inputtext>")
 def getDcard(inputtext):
     T1 = time.perf_counter()
-    result = Dcard(inputtext, T1, expiredDay)
+    cache = r.lrange("Dcard-"+inputtext,0,-1)
+    if len(cache) != 0:
+        result = Redis(cache)
+    else:
+        result = Dcard(inputtext,expiredDay)
+    T2 = time.perf_counter()
+    print(inputtext+"Dcard："+'%s毫秒' % ((T2 - T1)*1000))    
     return result
 
 
 @app.route("/api/search/<inputtext>")
 def getSearch(inputtext):
     T1 = time.perf_counter()
-    result = Search(inputtext, T1, expiredDay)
+    cache = r.lrange("Search-"+inputtext,0,-1)
+    if len(cache) != 0:
+        result = Redis(cache)
+    else:
+        result = Search(inputtext, expiredDay)
+    T2 = time.perf_counter()
+    print(inputtext+"Search："+'%s毫秒' % ((T2 - T1)*1000))
     return result
 
 
 @app.route("/api/blog/<inputtext>")
 def getBlog(inputtext):
     T1 = time.perf_counter()
-    result = Blog(inputtext, T1, expiredDay)
+    cache = r.lrange("Blog-"+inputtext,0,-1)
+    if len(cache) != 0:
+        result = Redis(cache)
+    else:
+        result = Blog(inputtext, expiredDay)
+    T2 = time.perf_counter()
+    print(inputtext+"Blog："+'%s毫秒' % ((T2 - T1)*1000))
     return result
 
 
 @app.route("/api/judgment/<inputtext>")
 def getJudgment(inputtext):
     T1 = time.perf_counter()
-    result = Judgment(inputtext, T1, expiredDay)
+    cache = r.lrange("Judgment-"+inputtext,0,-1)
+    if len(cache) != 0:
+        result = Redis(cache)
+    else:
+        result = Judgment(inputtext, expiredDay)
+    T2 = time.perf_counter()
+    print(inputtext+"Judgment："+'%s毫秒' % ((T2 - T1)*1000))
     return result
 
 
 @app.route("/api/review/<inputtext>")
 def getReview(inputtext):
     T1 = time.perf_counter()
-    result = Review(inputtext, T1, expiredDay)
+    cache = r.lrange("Review-"+inputtext,0,-1)
+    if len(cache) != 0:
+        result = Redis(cache)
+    else:
+        result = Review(inputtext, expiredDay)
+    T2 = time.perf_counter()
+    print(inputtext+"Review："+'%s毫秒' % ((T2 - T1)*1000))
     return result
 
 
 @app.route("/api/business/<inputtext>")
 def getBusiness(inputtext):
     T1 = time.perf_counter()
-    result = Business(inputtext, T1, expiredDay)
+    cache = r.lrange("Business-"+inputtext,0,-1)
+    if len(cache) != 0:
+        result = Redis(cache)
+    else:
+        result = Business(inputtext, expiredDay)
+    T2 = time.perf_counter()
+    print(inputtext+"Business："+'%s毫秒' % ((T2 - T1)*1000))
     return result
 
 
