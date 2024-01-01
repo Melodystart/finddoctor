@@ -126,7 +126,7 @@ def thankWEB(title, url):
         pass
 
 
-def crawlerletter():
+def crawl_letter():
     try:
         es.indices.create(index="thank",
                           body={"settings": {
@@ -176,3 +176,5 @@ def crawlerletter():
                 })
             else:
                 break
+
+crawl_letter()
