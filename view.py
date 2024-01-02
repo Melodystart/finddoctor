@@ -3,7 +3,8 @@ import json
 from py_test import *
 from model import *
 
-pool = redis.BlockingConnectionPool(timeout=10,host='localhost', port=6379, max_connections=40, decode_responses=True)
+pool = redis.BlockingConnectionPool(timeout=10,host='localhost', port=6379, password=get_key(
+    ".env", "redis_password"),max_connections=40, decode_responses=True)
 r = redis.Redis(connection_pool=pool)
 
 def view_redis_review(data,inputtext, result):
