@@ -459,6 +459,10 @@ def get_all(inputtext):
     return result
 
 def update_data():
+    data = get_expired_searched()
+    # 刪除7日前搜尋計數
+    for d in data:
+        r.zincrby('search_count', -1, d[0])
     delete_expired_data()
     data = get_mostsearched()
     for d in data:

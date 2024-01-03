@@ -225,6 +225,15 @@ def delete_expired_data():
     cursor.close()
     con.close()
 
+def get_expired_searched():
+    con = conPool.get_connection()
+    cursor = con.cursor()
+    cursor.execute("SELECT doctor FROM record WHERE createdAt<=%s;", (expiredDay,))
+    data = cursor.fetchall()
+    cursor.close()
+    con.close()
+    return data
+
 def get_mostsearched():
     con = conPool.get_connection()
     cursor = con.cursor()

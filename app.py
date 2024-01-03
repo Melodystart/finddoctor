@@ -70,6 +70,7 @@ def getDoctor():
 def getMost(inputtext):
     if inputtext != "default":
         r.zincrby('search_count', 1, inputtext)
+        save_searchedrecord(inputtext)
     hot_search = r.zrevrange('search_count', 0, 9, withscores=True)
     return hot_search
 
