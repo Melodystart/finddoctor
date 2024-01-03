@@ -178,5 +178,3 @@ def crawl_letter():
                 })
             else:
                 break
-
-crawl_letter()

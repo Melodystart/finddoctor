@@ -10,6 +10,8 @@ app = Flask(
     static_url_path="/"
 )
 
+crawl_letter()
+
 @app.route("/")
 def index():
     return render_template("index.html")
