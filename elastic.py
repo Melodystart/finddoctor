@@ -4,7 +4,9 @@ from bs4 import BeautifulSoup
 import pdfplumber
 import os
 from elasticsearch import Elasticsearch
-es = Elasticsearch("http://localhost:9200/")
+from dotenv import get_key
+
+es = Elasticsearch(["http://localhost:9200/"], basic_auth=(get_key(".env", "es_user"), get_key(".env", "es_password")))
 
 
 def thankPDF(title, url):

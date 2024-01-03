@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timedelta
 import json
 
-es = Elasticsearch("http://localhost:9200/")
+es = Elasticsearch(["http://localhost:9200/"], basic_auth=(get_key(".env", "es_user"), get_key(".env", "es_password")))
 
 conPool = pooling.MySQLConnectionPool(user=get_key(".env", "user"), password=get_key(
     ".env", "password"), host='finddoctor.collqfqpnilo.us-west-2.rds.amazonaws.com', database='finddoctor', pool_name='findConPool', pool_size=17,  auth_plugin='mysql_native_password')
