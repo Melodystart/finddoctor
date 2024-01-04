@@ -40,10 +40,8 @@ def call_reviewAPI(place_id, keyword, result, inputtext):
                 item = view_setitem_review(location,author,review_rating,review_until,review,review_link)
                 result["data"].append(item)
 
-                # try:
-                save_review(inputtext, author, review_rating, review_timestamp, review, review_link, location)
-                # except:
-                #     pass
+                if len(check_duplicated("review","review",review)) == 0:
+                    save_review(inputtext, author, review_rating, review_timestamp, review, review_link, location)
     except:
         pass
 
@@ -156,7 +154,8 @@ def Business(inputtext):
                         item = view_setitem_business(author,timestamp,comment,link,location)
                         result["data"].append(item)
 
-                        save_business(inputtext, author, timestamp, comment, link, location)
+                        if len(check_duplicated("businessComment","comment",comment)) == 0:
+                            save_business(inputtext, author, timestamp, comment, link, location)
         except:
             pass
     return result, 200
@@ -220,7 +219,7 @@ def Judgment(inputtext):
 
                 time.sleep(1)
                 links = driver.find_elements(By.CLASS_NAME, 'hlTitle_scroll')
-                if len(links) == 0:
+                if len(links) == 0 & len(check_duplicated("judgment","doctor",inputtext)) == 0:
                     save_judgment(inputtext, "", "搜尋不到資料：關鍵字可嘗試僅輸入醫生名稱，例如：王大明")
                 else:
                     for l in links:
@@ -229,7 +228,8 @@ def Judgment(inputtext):
 
                         item = view_setitem_judgment(link, title)
                         result["data"].append(item)
-                        save_judgment(inputtext, link, title)
+                        if len(check_duplicated("judgment","title",title)) == 0:
+                            save_judgment(inputtext, link, title)
             except:
                 pass
             driver.close()
@@ -284,7 +284,8 @@ def Ptt(inputtext):
 
                                 item = view_setitem_ptt(link,title,text)
                                 result["data"].append(item)
-                                save_ptt(inputtext, link, title, text)
+                                if len(check_duplicated("Ptt","text",text)) == 0:
+                                    save_ptt(inputtext, link, title, text)
                 page += 1
             except:
                 break
@@ -330,7 +331,8 @@ def Search(inputtext):
 
                     item = view_setitem_search(link, title, text)
                     result["data"].append(item)
-                    save_search(inputtext, link, title, text)
+                    if len(check_duplicated("search","text",text)) == 0:
+                        save_search(inputtext, link, title, text)
         except:
             pass
     return result, 200
@@ -375,7 +377,8 @@ def Dcard(inputtext):
 
                         item = view_setitem_dcard(link,title,text)
                         result["data"].append(item)
-                        save_dcard(inputtext, link, title, text)
+                        if len(check_duplicated("Dcard","text",text)) == 0:
+                            save_dcard(inputtext, link, title, text)
                 page += 1
             except:
                 break
@@ -424,7 +427,8 @@ def Blog(inputtext):
 
                             item = view_setitem_blog(link,title,text)
                             result["data"].append(item)
-                            save_blog(inputtext, link, title, text)
+                            if len(check_duplicated("blog","text",text)) == 0:
+                                save_blog(inputtext, link, title, text)
                 page += 1
             except:
                 break

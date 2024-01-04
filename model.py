@@ -198,7 +198,7 @@ def get_doctor():
     con = conPool.get_connection()
     cursor = con.cursor()
     cursor.execute(
-        "SELECT department, name FROM doctor;")
+        "SELECT department, name FROM doctor ORDER BY department ASC, name ASC;")
     data = cursor.fetchall()
     cursor.close()
     con.close()
@@ -317,3 +317,13 @@ def Redis(cache):
     for item in cache:
         result["data"].append(json.loads(item))
     return result
+
+def check_duplicated(table,column,text):
+    con = conPool.get_connection()
+    cursor = con.cursor()
+    sql = 'SELECT * FROM ' +table + ' WHERE ' + column + ' = "'+text+'";'
+    cursor.execute(sql)
+    data = cursor.fetchall()
+    cursor.close()
+    con.close()
+    return data
