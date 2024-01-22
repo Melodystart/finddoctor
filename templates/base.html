@@ -139,6 +139,10 @@
         search = document.querySelector(".doctor").value;
         department = "";
       }
+      if (!search.length) {
+        window.alert("請選擇科別及醫生 或 請直接輸入醫生名稱");
+        return (window.event.returnValue = false);
+      }
       return (window.location.href =
         page + "?search=" + search + "&department=" + department);
     });

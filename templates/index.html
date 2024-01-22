@@ -117,6 +117,10 @@
         } else {
           search = document.querySelector(".doctor").value;
         }
+        if (!search.length) {
+          window.alert("請選擇科別及醫生 或 請直接輸入醫生名稱");
+          return (window.event.returnValue = false);
+        }
         const url = "/api/all/" + search;
         fetch(url, { method: "get" });
         return (window.location.href =
