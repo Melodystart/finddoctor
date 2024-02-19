@@ -24,8 +24,7 @@ def call_reviewAPI(place_id, keyword, result, inputtext):
         place_id, reviews_limit=1, reviews_query=keyword, sort="newest", language="zh-TW", region="TW")
     try:
         reviews = results[0]["reviews_data"]
-
-        if len(reviews) > 0:
+        if len(reviews) > 0 & keyword in reviews[i]["review_text"]:
             location = results[0]["name"]
             result["title"] = location
 
